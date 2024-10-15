@@ -15,14 +15,14 @@ jobs:
       - name: Cleanup working directory
         run: rm -rf "${{github.workspace}}"
       - name: Checkout HISE repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           ref: 'develop'
       - name: Build & Upload HISE.app
         working-directory: ${{ github.workspace }}/tools/auto_build/
         run: sh ./build_mac.sh
       - name: Upload HISE.app
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: HISE.app
           path: ${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/CI/HISE.app
