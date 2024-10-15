@@ -21,10 +21,10 @@ echo "Build completed successfully"
 built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR | awk '{print $3}' | sed 's/[[:space:]]*$//')
 
 # Check if the app exists
-app_path="$built_products_dir/HISE Debug.app"
+app_path="$built_products_dir/HISE.app"
 
 if [ -d "$app_path" ]; then
-    echo "HISE Debug.app is ready at $app_path"
+    echo "HISE.app is ready at $app_path"
 else
     echo "Error: Built app not found"
     exit 1

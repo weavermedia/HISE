@@ -22,5 +22,5 @@ jobs:
       - name: Upload HISE.app
         uses: actions/upload-artifact@v4
         with:
-          name: "HISE Debug.app"
-          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
+          name: HISE.app
+          path: ${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE.app
