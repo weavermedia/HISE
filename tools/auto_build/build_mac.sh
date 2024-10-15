@@ -32,6 +32,11 @@ built_products_dir=${built_products_dir%YES}
 
 echo "Adjusted BUILT_PRODUCTS_DIR: $built_products_dir"
 
+# Remove trailing space if present
+built_products_dir=$(echo "$built_products_dir" | sed 's/[[:space:]]*$//')
+
+echo "Final BUILT_PRODUCTS_DIR: $built_products_dir"
+
 # Check if the app exists and rename it
 app_path="$built_products_dir/HISE Standalone.app"
 if [ -d "$app_path" ]; then
@@ -39,9 +44,9 @@ if [ -d "$app_path" ]; then
     echo "HISE.app is ready for upload at ${app_path%/*}/HISE.app"
 else
     echo "Error: Built app not found at $app_path"
-    echo "Contents of parent directory:"
-    ls -la "$(dirname "$built_products_dir")"
-    echo "Contents of BUILT_PRODUCTS_DIR (if it exists):"
-    ls -la "$built_products_dir" || echo "Directory does not exist"
+    echo "Contents of build directory:"
+    ls -la "$standalone_folder/Builds/MacOSX/build"
+    echo "Contents of Debug directory:"
+    ls -la "$standalone_folder/Builds/MacOSX/build/Debug"
     exit 1
 fi
