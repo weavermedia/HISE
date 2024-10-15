@@ -13,11 +13,24 @@ chmod +x "tools/Projucer/Projucer.app/Contents/MacOS/Projucer"
 
 echo "Compiling Standalone App..."
 
-xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration "CI" | xcpretty
+# Show build settings for Debug configuration
+echo "Debug Build settings:"
+xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR
+
+# Actual build command
+xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug | xcpretty
 
 echo "Build completed successfully"
 
-# Rename the app
-mv "$standalone_folder/Builds/MacOSX/build/CI/HISE Standalone.app" "$standalone_folder/Builds/MacOSX/build/CI/HISE.app"
+# Get the BUILT_PRODUCTS_DIR from xcodebuild
+built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR | awk '{print $3}')
 
-echo "HISE.app is ready for upload"
+# Check if the app exists and rename it
+app_path="$built_products_dir/HISE Standalone.app"
+if [ -d "$app_path" ]; then
+    mv "$app_path" "${app_path%/*}/HISE.app"
+    echo "HISE.app is ready for upload at ${app_path%/*}/HISE.app"
+else
+    echo "Error: Built app not found at $app_path"
+    exit 1
+fi
