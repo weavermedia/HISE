@@ -1,0 +1,28 @@
+name: Build Meat Beats
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+jobs:
+  ci_macos:
+    runs-on: macos-latest
+    steps:
+      - name: Check Xcode version
+        run: |
+          xcodebuild -version
+          xcode-select -p
+      - name: Cleanup working directory
+        run: rm -rf "${{github.workspace}}"
+      - name: Checkout HISE repository
+        uses: actions/checkout@v1
+        with:
+          ref: 'develop'
+      - name: Build & Upload HISE.app
+        working-directory: ${{ github.workspace }}/tools/auto_build/
+        run: sh ./build_mac.sh
+      - name: Upload HISE.app
+        uses: actions/upload-artifact@v2
+        with:
+          name: HISE.app
+          path: ${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/CI/HISE.app
