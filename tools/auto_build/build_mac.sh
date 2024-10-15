@@ -25,6 +25,13 @@ echo "Build completed successfully"
 # Get the BUILT_PRODUCTS_DIR from xcodebuild
 built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR | awk '{print $3}')
 
+echo "BUILT_PRODUCTS_DIR: $built_products_dir"
+
+# Remove the 'YES' from the end of the path if present
+built_products_dir=${built_products_dir%YES}
+
+echo "Adjusted BUILT_PRODUCTS_DIR: $built_products_dir"
+
 # Check if the app exists and rename it
 app_path="$built_products_dir/HISE Standalone.app"
 if [ -d "$app_path" ]; then
@@ -32,7 +39,9 @@ if [ -d "$app_path" ]; then
     echo "HISE.app is ready for upload at ${app_path%/*}/HISE.app"
 else
     echo "Error: Built app not found at $app_path"
-    echo "Contents of $built_products_dir:"
-    ls -la "$built_products_dir"
+    echo "Contents of parent directory:"
+    ls -la "$(dirname "$built_products_dir")"
+    echo "Contents of BUILT_PRODUCTS_DIR (if it exists):"
+    ls -la "$built_products_dir" || echo "Directory does not exist"
     exit 1
 fi
