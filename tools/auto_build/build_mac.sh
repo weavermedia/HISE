@@ -26,7 +26,7 @@ echo "Build completed successfully"
 built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR | awk '{print $3}')
 
 # Check if the app exists and rename it
-app_path="$built_products_dir/HISE Standalone.app"
+app_path="$built_products_dir/HISE Debug.app"
 if [ -d "$app_path" ]; then
     mv "$app_path" "${app_path%/*}/HISE.app"
     echo "HISE.app is ready for upload at ${app_path%/*}/HISE.app"
