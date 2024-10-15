@@ -12,8 +12,6 @@ jobs:
         run: |
           xcodebuild -version
           xcode-select -p
-      - name: Cleanup working directory
-        run: rm -rf "${{github.workspace}}"
       - name: Checkout HISE repository
         uses: actions/checkout@v4
         with:
