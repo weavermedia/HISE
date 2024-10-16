@@ -16,16 +16,11 @@ xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj"
 
 echo "Build completed successfully"
 
-# Get the BUILT_PRODUCTS_DIR from xcodebuild
-built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -showBuildSettings | grep BUILT_PRODUCTS_DIR | awk '{print $3}')
+# Check if the app exists at the right path
+app_path="projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
 
-echo "BUILT_PRODUCTS_DIR: $built_products_dir"
-
-# Check if the app exists
-app_path_debug="$built_products_dir/HISE Debug.app"
-
-if [ -d "$app_path_debug" ]; then
-  echo "HISE Debug.app is ready for upload at $app_path_debug"
+if [ -d "$app_path" ]; then
+  echo "HISE Debug.app is ready for upload at $app_path"
 else
   echo "Error: Built app not found"
   exit 1
