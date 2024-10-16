@@ -21,15 +21,6 @@ built_products_dir=$(xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE 
 
 echo "BUILT_PRODUCTS_DIR: $built_products_dir"
 
-# Remove the 'YES' from the end of the path if present
-built_products_dir=${built_products_dir%YES}
-echo "Adjusted BUILT_PRODUCTS_DIR: $built_products_dir"
-
-# Remove trailing space if present
-built_products_dir=$(echo "$built_products_dir" | sed 's/[[:space:]]*$//')
-
-echo "Final BUILT_PRODUCTS_DIR: $built_products_dir"
-
 # Check if the app exists
 app_path_debug="$built_products_dir/HISE Debug.app"
 
