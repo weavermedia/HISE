@@ -22,5 +22,5 @@ jobs:
       - name: Upload HISE Debug.app as zip
         uses: actions/upload-artifact@v4
         with:
-          name: "HISE Debug.zip"
-          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.zip"
+          name: "HISE_Debug.zip"
+          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE_Debug.zip"
