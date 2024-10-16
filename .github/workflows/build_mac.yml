@@ -16,11 +16,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: 'develop'
-      - name: Build & Upload HISE.app
+      - name: Build & Upload HISE Debug.app
         working-directory: ${{ github.workspace }}/tools/auto_build/
         run: sh ./build_mac.sh
-      - name: Upload HISE.app
+      - name: Upload HISE Debug.app
         uses: actions/upload-artifact@v4
         with:
-          name: HISE.app
-          path: ${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE.app
+          name: "HISE Debug.app"
+          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
