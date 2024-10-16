@@ -40,16 +40,14 @@ app_path_standalone="$built_products_dir/HISE Standalone.app"
 app_path_debug="$built_products_dir/HISE Debug.app"
 
 if [ -d "$app_path_standalone" ]; then
+    echo "Found HISE Standalone.app at $app_path_standalone"
     mv "$app_path_standalone" "${app_path_standalone%/*}/HISE.app"
     echo "HISE.app is ready for upload at ${app_path_standalone%/*}/HISE.app"
 elif [ -d "$app_path_debug" ]; then
+    echo "Found HISE Debug.app at $app_path_debug"
     mv "$app_path_debug" "${app_path_debug%/*}/HISE.app"
     echo "HISE.app is ready for upload at ${app_path_debug%/*}/HISE.app"
 else
     echo "Error: Built app not found"
-    echo "Contents of build directory:"
-    ls -la "$standalone_folder/Builds/MacOSX/build"
-    echo "Contents of Debug directory:"
-    ls -la "$built_products_dir"
     exit 1
 fi
