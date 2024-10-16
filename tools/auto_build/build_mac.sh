@@ -23,9 +23,10 @@ if [ -d "$app_path" ]; then
   echo "HISE Debug.app is ready for upload at $app_path"
 
   # Zip the app
-  zip_path="${app_path%.app}.zip"
+  zip_name="HISE_Debug.zip"
+  zip_path="$(dirname "$app_path")/$zip_name"
   echo "Zipping the app..."
-  zip -r "$zip_path" "$app_path"
+  (cd "$(dirname "$app_path")" && zip -r "$zip_name" "$(basename "$app_path")")
 
   if [ $? -eq 0 ]; then
     echo "HISE Debug.app has been successfully zipped to $zip_path"
