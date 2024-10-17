@@ -6,7 +6,7 @@ on:
       - develop
 jobs:
   build_mac:
-    runs-on: macos-14-xlarge
+    runs-on: macos-latest
     steps:
       - name: Check Xcode version
         run: |
