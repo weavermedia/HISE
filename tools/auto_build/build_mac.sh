@@ -21,19 +21,6 @@ app_path="projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
 
 if [ -d "$app_path" ]; then
   echo "HISE Debug.app is ready for upload at $app_path"
-
-  # Zip the app
-  zip_name="HISE_Debug.zip"
-  zip_path="$(dirname "$app_path")/$zip_name"
-  echo "Zipping the app..."
-  (cd "$(dirname "$app_path")" && zip -r "$zip_name" "$(basename "$app_path")")
-
-  if [ $? -eq 0 ]; then
-    echo "HISE Debug.app has been successfully zipped to $zip_path"
-  else
-    echo "Error: Failed to zip the app"
-    exit 1
-  fi
 else
   echo "Error: Built app not found"
   exit 1
