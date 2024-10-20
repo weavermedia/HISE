@@ -12,7 +12,7 @@ chmod +x "tools/Projucer/Projucer.app/Contents/MacOS/Projucer"
 
 echo "Compiling Standalone App..."
 
-xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug | xcpretty
+xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -arch arm64 | xcpretty
 
 echo "Build completed successfully"
 
