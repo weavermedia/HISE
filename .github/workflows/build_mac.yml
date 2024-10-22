@@ -11,7 +11,7 @@ jobs:
       - name: Checkout HISE repository
         uses: actions/checkout@v4
         with:
-          ref: 'develop'
+          ref: 'meatbeats'
       - name: Build & Upload HISE Debug.app
         working-directory: ${{ github.workspace }}/tools/auto_build/
         run: sh ./build_mac.sh
