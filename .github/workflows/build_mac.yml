@@ -1,0 +1,22 @@
+name: Build Mac
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - meatbeats
+jobs:
+  build_mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout HISE repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'develop'
+      - name: Build & Upload HISE Debug.app
+        working-directory: ${{ github.workspace }}/tools/auto_build/
+        run: sh ./build_mac.sh
+      - name: Upload HISE Debug.app
+        uses: actions/upload-artifact@v4
+        with:
+          name: "HISE Debug.app"
+          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
