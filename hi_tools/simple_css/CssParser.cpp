@@ -1338,7 +1338,7 @@ bool Parser::matchIf(TokenType t)
 		{
 			currentToken = "";
 
-			while(CharacterFunctions::isLetterOrDigit(*ptr) || *ptr == '-')
+			while(CharacterFunctions::isLetterOrDigit(*ptr) || *ptr == '-' || *ptr == '_')
 				currentToken << *ptr++;
 
 			return currentToken.isNotEmpty();
@@ -1442,6 +1442,10 @@ PseudoState Parser::parsePseudoClass()
 				element = PseudoElementType::Before;
 			if(currentToken == "after")
 				element = PseudoElementType::After;
+            if(currentToken == "before2")
+                element = PseudoElementType::Before2;
+            if(currentToken == "after2")
+                element = PseudoElementType::After2;
 		}
 		else
 		{
@@ -1563,8 +1567,9 @@ Parser::RawClass Parser::parseSelectors()
 
 		skip();
 	}
-	
-	newClass.selectors.push_back(currentList);
+
+	if(!currentList.empty())
+		newClass.selectors.push_back(currentList);
 
 	return newClass;
 }
@@ -1578,6 +1583,13 @@ Result Parser::parse()
 		while(ptr != end)
 		{
 			auto newClass = parseSelectors();
+
+			if(!newClass)
+			{
+				match(TokenType::EndOfFIle);
+				return Result::ok();
+			}
+				
 
 			if(!matchIf(TokenType::OpenBracket))
 			{
