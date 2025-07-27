@@ -12,7 +12,14 @@ chmod +x "tools/Projucer/Projucer.app/Contents/MacOS/Projucer"
 
 echo "Compiling Standalone App..."
 
+echo "macOS version: $(sw_vers -productVersion)"
 echo "Xcode version: $(xcodebuild -version | head -n 1)"
+
+if command -v xcpretty >/dev/null 2>&1; then
+  echo "xcpretty is installed"
+else
+  echo "xcpretty is not installed - build output will be verbose"
+fi
 
 xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -arch arm64 | xcpretty
 
