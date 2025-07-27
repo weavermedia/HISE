@@ -15,8 +15,12 @@ jobs:
       - name: Build & Upload HISE Debug.app
         working-directory: ${{ github.workspace }}/tools/auto_build/
         run: sh ./build_mac.sh
+      - name: Create zip archive
+        run: |
+          cd "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug"
+          ditto -c -k --keepParent "HISE Debug.app" "HISE_Debug.zip"
       - name: Upload HISE Debug.app
         uses: actions/upload-artifact@v4
         with:
           name: "HISE Debug.app"
-          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
+          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE_Debug.zip"
