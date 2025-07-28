@@ -6,7 +6,7 @@ on:
       - meatbeats
 jobs:
   build_mac:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - name: Checkout HISE repository
         uses: actions/checkout@v4
