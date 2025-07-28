@@ -21,15 +21,15 @@ else
   echo "xcpretty is not installed - build output will be verbose"
 fi
 
-xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Debug -arch arm64 | xcpretty
+xcodebuild -project "$standalone_folder/Builds/MacOSX/HISE Standalone.xcodeproj" -configuration Release -arch arm64 | xcpretty
 
 echo "Build completed successfully"
 
 # Check if the app exists at the right path
-app_path="projects/standalone/Builds/MacOSX/build/Debug/HISE Debug.app"
+app_path="projects/standalone/Builds/MacOSX/build/Release/HISE.app"
 
 if [ -d "$app_path" ]; then
-  echo "HISE Debug.app is ready for upload at $app_path"
+  echo "HISE.app is ready for upload at $app_path"
 else
   echo "Error: Built app not found"
   exit 1

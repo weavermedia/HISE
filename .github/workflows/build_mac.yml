@@ -6,21 +6,21 @@ on:
       - meatbeats
 jobs:
   build_mac:
-    runs-on: macos-15
+    runs-on: macos-latest
     steps:
       - name: Checkout HISE repository
         uses: actions/checkout@v4
         with:
           ref: 'meatbeats'
-      - name: Build & Upload HISE Debug.app
+      - name: Build & Upload HISE.app
         working-directory: ${{ github.workspace }}/tools/auto_build/
         run: sh ./build_mac.sh
       - name: Create zip archive
         run: |
-          cd "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug"
-          ditto -c -k --keepParent "HISE Debug.app" "HISE_Debug.zip"
-      - name: Upload HISE Debug.app
+          cd "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Release"
+          ditto -c -k --keepParent "HISE.app" "HISE.zip"
+      - name: Upload HISE.app
         uses: actions/upload-artifact@v4
         with:
-          name: "HISE Debug.app"
-          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Debug/HISE_Debug.zip"
+          name: "HISE.app"
+          path: "${{ github.workspace }}/projects/standalone/Builds/MacOSX/build/Release/HISE.zip"
