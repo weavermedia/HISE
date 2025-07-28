@@ -1,12 +1,12 @@
 .*
 *.o
 *.d
-**/.DS_Store
 !/.github
 !/.github/**
 !/.gitignore
 !/.travis.yml
 !/.vscode/*
+**/.DS_Store
 api generator/xml
 changelog.md
 changelog.txt
