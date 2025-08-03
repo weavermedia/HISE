@@ -360,7 +360,7 @@ void MacroControlledObject::setAttributeWithUndo(float newValue, bool useCustomO
 	}
 	else
 	{
-		getProcessor()->setAttribute(parameter, newValue, dontSendNotification);
+		getProcessor()->setAttribute(parameter, newValue, sendNotificationAsync);
 	}
 }
 
@@ -1063,12 +1063,40 @@ void HiSlider::ModUpdater::setUpdateFunction(const ModulationDisplayValue::Query
 bool HiSlider::ModUpdater::canBeDropped(const var& info) const
 {
 	auto typeMatches = info["Type"] == "ModulationDrag";
-	return typeMatches;
+
+	if(typeMatches)
+	{
+		auto sourceIndex = (int)info[MatrixIds::SourceIndex];
+		auto chain = parent.getProcessor()->getMainController()->getMainSynthChain();
+
+		if(auto gc = ProcessorHelpers::getFirstProcessorWithType<GlobalModulatorContainer>(chain))
+		{
+			auto md = gc->getMatrixModulatorData();
+			auto targetId = parent.getProcessor()->getModulationTargetId(parent.getParameter());
+			auto con = MatrixIds::Helpers::getConnection(md, sourceIndex, targetId);
+
+			auto a = !con.isValid() ? GlobalModulatorContainer::DragAction::Hover :
+								      GlobalModulatorContainer::DragAction::DisabledHover;
+
+			gc->sendDragMessage(sourceIndex, targetId, a);
+			return !con.isValid();
+		}
+	}
+
+	return false;
 }
 
 void HiSlider::ModUpdater::onDrop(const var& info)
 {
 	auto sourceIndex = (int)info["SourceIndex"];
+	auto chain = parent.getProcessor()->getMainController()->getMainSynthChain();
+
+	if(auto gc = ProcessorHelpers::getFirstProcessorWithType<GlobalModulatorContainer>(chain))
+	{
+		auto targetId = parent.getProcessor()->getModulationTargetId(parent.getParameter());
+		gc->sendDragMessage(sourceIndex, targetId, GlobalModulatorContainer::DragAction::Drop);
+	}
+
 	parent.getProcessor()->onModulationDrop(parent.getParameter(), sourceIndex);
 }
 
@@ -1936,17 +1964,6 @@ void HiToggleButton::mouseDown(const MouseEvent &e)
 {
 	checkMouseClickProfiler(true);
 
-	if(auto pp = getConnectedPluginParameter())
-	{
-		if(getTriggeredOnMouseDown())
-		{
-			dynamic_cast<HisePluginParameterBase*>(pp)->setIgnoreNextHostUpdate(true);
-		}
-
-		pp->beginChangeGesture();
-	}
-		
-
 	CHECK_MIDDLE_MOUSE_DOWN(e);
 
     if(e.mods.isLeftButtonDown())
@@ -2002,17 +2019,6 @@ void HiToggleButton::mouseUp(const MouseEvent& e)
 
     abortTouch();
     MomentaryToggleButton::mouseUp(e);
-
-	if(auto pp = getConnectedPluginParameter())
-	{
-		if(!getTriggeredOnMouseDown())
-		{
-			dynamic_cast<HisePluginParameterBase*>(pp)->setIgnoreNextHostUpdate(true);
-		}
-
-		pp->endChangeGesture();
-	}
-		
 }
 
 HiComboBox::HiComboBox(const String& name):
