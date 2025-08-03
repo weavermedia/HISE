@@ -75,7 +75,14 @@ namespace hise { using namespace juce;
 				{
 					auto maxPos = fullSize * maxPeaks[i];
                         
-					g.setColour(mc);
+					if (maxPeaks[i] >= 0.99f) // Check if the peak is at or very close to 1.0f
+					{
+						g.setColour(Colours::red);
+					}
+					else
+					{
+						g.setColour(mc);
+					}
                         
 					auto c = isVertical ? maxCopy.removeFromBottom(maxPos).withHeight(2.0f) :
 						         maxCopy.removeFromLeft(maxPos).removeFromRight(2.0f);
