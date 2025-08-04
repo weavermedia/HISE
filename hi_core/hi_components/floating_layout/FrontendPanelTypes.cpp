@@ -76,7 +76,6 @@ namespace hise { using namespace juce;
 				{
 					auto maxPos = fullSize * maxPeaks[i];
                         
-					// If peak is at or very close to 1.0f and overPeakColour is defined, use it
 					if (maxPeaks[i] >= 0.99f && oc.getAlpha() > 0)
 					{
 						g.setColour(oc);
