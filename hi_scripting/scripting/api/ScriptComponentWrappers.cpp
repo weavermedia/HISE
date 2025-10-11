@@ -627,7 +627,7 @@ void ScriptCreatedComponentWrappers::SliderWrapper::updateSliderRange(ScriptingA
         min = jmax(min, 0.0);
         max = jmin(max, (double)((int)TempoSyncer::Tempo::numTempos-1));
         
-		s->setMode(HiSlider::Mode::TempoSync, NormalisableRange<double>((double)min, (double)max, 2.0));
+		s->setMode(HiSlider::Mode::TempoSync, NormalisableRange<double>((double)min, (double)max, 1.0));
 		return;
 	}
 
@@ -2898,12 +2898,18 @@ void ScriptCreatedComponentWrappers::AudioWaveformWrapper::updateColours(AudioDi
 ScriptCreatedComponentWrappers::WebViewWrapper::WebViewWrapper(ScriptContentComponent *content, ScriptingApi::Content::ScriptWebView *webview, int index) :
 	ScriptCreatedComponentWrapper(content, webview)
 {
-	auto wc = new hise::WebViewWrapper(webview->getData());
+	auto wc = new hise::WebViewWrapper(webview->getData(), false);
 	dynamic_cast<GlobalSettingManager*>(getProcessor()->getMainController())->addScaleFactorListener(this);
 	component = wc;
-
+	
 	if ((vp = content->findParentComponentOfClass<ZoomableViewport>()))
 		vp->addZoomListener(this);
+}
+
+void ScriptCreatedComponentWrappers::WebViewWrapper::postInit()
+{
+	auto wv = dynamic_cast<hise::WebViewWrapper*>(getComponent());
+	wv->refresh();
 }
 
 ScriptCreatedComponentWrappers::WebViewWrapper::~WebViewWrapper()

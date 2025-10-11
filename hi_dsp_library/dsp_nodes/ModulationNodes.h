@@ -243,9 +243,9 @@ public:
 					
 				}
 				else
-					v = mv.toBlock()[s.uptime++];
+					v = bl[s.uptime++];
 
-				if(s.uptime == mv.toBlock().size())
+				if(s.uptime == bl.size())
 					s.uptime = 0;
 
 				applyModulation(&v, 1, s.baseValue, s.intensity);
@@ -277,6 +277,25 @@ public:
 
 	template <typename PD> void process(PD& data)
 	{
+		if constexpr (PD::hasCompileTimeSize())
+		{
+			if(data.getNumSamples() == 1)
+			{
+				constexpr static int NumChannels = PD::getNumFixedChannels();
+
+				span<float, NumChannels> frameData;
+
+				if(config.shouldProcessSignal())
+				{
+					for(int i = 0; i < NumChannels; i++)
+						frameData[i] = data.getRawChannelPointers()[i][0];
+				}
+
+				this->processFrame(frameData);
+				return;
+			}
+		}
+
 		if(ok)
 		{
 			jassert(signal);
@@ -330,20 +349,18 @@ public:
 						s.uptime = 0;
 
 					applyModulation(target.begin(), data.getNumSamples(), s.baseValue, s.intensity);
-				}
+ 				}
 				else if (t == Types::ID::Void)
 				{
 					for(int i = 0; i < numToCopy; i++)
 						target[i] = s.baseValue.advance();
-				}
+				} 
 
 				if(ConfigClass::shouldEnableDisplayBuffer() && state.isFirst())
 				{
 					auto numToWrite = jmax(2, data.getNumSamples() / DisplayBufferDownsamplingFactor);
 					this->updateBuffer(target[0], numToWrite);
-
 				}
-					
 
 				modValue.setModValue(target[0]);
 			}
@@ -364,7 +381,7 @@ public:
 					if(sr == SignalRatio::ControlRate)
 						uptimeDelta = data.getNumSamples();
 					else // sr == SignalRatio::AudioRate
-						uptimeDelta = data.getNumSamples() / HISE_CONTROL_RATE_DOWNSAMPLING_FACTOR;
+						uptimeDelta = jmax(1, data.getNumSamples() / HISE_CONTROL_RATE_DOWNSAMPLING_FACTOR);
 
 					v = signal[s.uptime];
 
@@ -519,6 +536,10 @@ private:
 	SignalRatio sr = SignalRatio::Uninitialised;
 	bool ok = false;
 	ModValue modValue;
+
+public:
+
+	SN_VOICE_SETTER(mod_base, state);
 };
 
 }
@@ -978,6 +999,8 @@ template <int NV> struct matrix_mod:
 	}
 
 	float zeroDelta = 0.0f;;
+
+	double getLastModValue() const { return mv.getModValue(); }
 
 private:
 

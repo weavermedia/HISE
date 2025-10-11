@@ -1167,7 +1167,10 @@ public runtime_target::indexable_target<IndexType, runtime_target::RuntimeTarget
         
     };
     
-    ~global_cable() = default;
+    ~global_cable()
+	{
+		this->disconnect();	
+	};
     
     static constexpr bool isPolyphonic() { return false; }
     
@@ -1366,10 +1369,19 @@ template <typename... Ts> struct global_cable_cpp_manager: private advanced_tupl
 
 	virtual ~global_cable_cpp_manager()
 	{
-		this->connectToRuntimeTarget(false, {});
+		if(!cleanedUp)
+			cleanup();
 	}
 
-	void connectToRuntimeTarget(bool addConnection, const runtime_target::connection& c)
+	bool cleanedUp = false;
+
+	void cleanup()
+	{
+		this->connectToRuntimeTarget(false, {});
+		cleanedUp = true;
+	}
+
+	virtual void connectToRuntimeTarget(bool addConnection, const runtime_target::connection& c)
 	{
 		reset_each(addConnection, c, this->getIndexSequence());
 
