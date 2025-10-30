@@ -424,14 +424,25 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 	if(enableSecondOsc)
 		rightGenerator.setFrequency(cyclesPerSecond * octaveTransposeFactor2);
 
+	// Get user phase offset
 	auto wavesynth = static_cast<WaveSynth*>(getOwnerSynth());
 	double phase1 = wavesynth->getStartPhaseValue(true);
 	double phase2 = wavesynth->getStartPhaseValue(false);
 
-	leftGenerator.sync(phase1);
-        
+	// Get timing offset
+	double startOffsetSamples = (double)getCurrentHiseEvent().getStartOffset();
+	double freq1Hz = cyclesPerSecond * octaveTransposeFactor1;
+	double timingPhase1 = (startOffsetSamples / getSampleRate()) * freq1Hz;
+
+	// Apply user phase offset + timing offset
+	leftGenerator.sync(std::fmod(phase1 + timingPhase1, 1.0));
+
 	if(enableSecondOsc)
-		rightGenerator.sync(phase2);
+	{
+		double freq2Hz = cyclesPerSecond * octaveTransposeFactor2;
+		double timingPhase2 = (startOffsetSamples / getSampleRate()) * freq2Hz;
+		rightGenerator.sync(std::fmod(phase2 + timingPhase2, 1.0));
+	}
 
 #else
 
