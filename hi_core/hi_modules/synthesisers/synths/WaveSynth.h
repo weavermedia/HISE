@@ -205,8 +205,7 @@ public:
 		GainChain=0,
 		PitchChain,
 		MixChain,
-		Osc2PitchIndex,
-		PhaseChain
+		Osc2PitchIndex
 	};
 
 	enum AdditionalWaveformTypes
@@ -243,7 +242,6 @@ public:
 	{
 		MixModulation = ModulatorSynth::numInternalChains,
 		Osc2PitchChain,
-		PhaseModulation,
 		numInternalChains
 	};
 
@@ -277,9 +275,6 @@ public:
 		if(parameterIndex == SpecialParameters::Mix)
 			return new ModulatorChain::GetModulationOutput<(int)InternalChains::MixModulation>();
 
-		if(parameterIndex == SpecialParameters::StartPhase)
-			return new ModulatorChain::GetModulationOutput<(int)InternalChains::PhaseModulation>();
-
 		return ModulatorSynth::getModulationQueryFunction(parameterIndex);
 	}
 
@@ -299,8 +294,6 @@ public:
 	}
 
 	float getStartPhaseValue() const noexcept { return startPhase; }
-
-	ModulatorChain* getPhaseChain() const noexcept { return phaseChain; }
 
 	bool isHardSyncEnabled() const { return hardSync; }
 
@@ -342,7 +335,6 @@ private:
 
 	ModulatorChain* mixChain;
 	ModulatorChain* osc2pitchChain;
-	ModulatorChain* phaseChain;
 
 	AudioSampleBuffer tempBuffer;
 

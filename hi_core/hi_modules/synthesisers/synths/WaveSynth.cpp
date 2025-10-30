@@ -57,7 +57,6 @@ WaveSynth::WaveSynth(MainController *mc, const String &id, int numVoices) :
 {
 	modChains += { this, "Mix Modulation", ModulatorChain::ModulationType::Normal, Modulation::Mode::CombinedMode };
 	modChains += { this, "Osc2 Pitch Modulation", ModulatorChain::ModulationType::Normal, Modulation::PitchMode};
-	modChains += { this, "Phase Modulation", ModulatorChain::ModulationType::VoiceStart, Modulation::Mode::GainMode};
 
 	finaliseModChains();
 
@@ -70,7 +69,6 @@ WaveSynth::WaveSynth(MainController *mc, const String &id, int numVoices) :
 
 	mixChain = modChains[ChainIndex::MixChain].getChain();
 	osc2pitchChain = modChains[ChainIndex::Osc2PitchIndex].getChain();
-	phaseChain = modChains[ChainIndex::PhaseChain].getChain();
 
 	scaleFunction = [](float input) { return input * 2.0f - 1.0f; };
 
@@ -161,7 +159,6 @@ Processor * WaveSynth::getChildProcessor(int processorIndex)
 	case PitchModulation:	return pitchChain;
 	case MixModulation:		return mixChain;
 	case Osc2PitchChain:    return osc2pitchChain;
-	case PhaseModulation:   return phaseChain;
 	case MidiProcessor:		return midiProcessorChain;
 	case EffectChain:		return effectChain;
 	default:				jassertfalse; return nullptr;
@@ -178,7 +175,6 @@ const Processor * WaveSynth::getChildProcessor(int processorIndex) const
 	case PitchModulation:	return pitchChain;
 	case MixModulation:		return mixChain;
 	case Osc2PitchChain:    return osc2pitchChain;
-	case PhaseModulation:   return phaseChain;
 	case MidiProcessor:		return midiProcessorChain;
 	case EffectChain:		return effectChain;
 	default:				jassertfalse; return nullptr;
@@ -316,7 +312,6 @@ void WaveSynth::setInternalAttribute(int parameterIndex, float newValue)
 	case HardSync:				hardSync = newValue > 0.5f; break;
 	case StartPhase:
 		startPhase = jlimit<float>(0.0f, 1.0f, newValue);
-		modChains[PhaseChain].getChain()->setInitialValue(newValue);
 		break;
 	default:					jassertfalse;
 		break;
@@ -425,20 +420,9 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 	if(enableSecondOsc)
 		rightGenerator.setFrequency(cyclesPerSecond * octaveTransposeFactor2);
 
-	// Apply phase modulation
+	// Apply phase offset
 	auto wavesynth = static_cast<WaveSynth*>(getOwnerSynth());
 	double phase = wavesynth->getStartPhaseValue();
-
-	// Add modulation from phase chain
-	if(auto phaseChain = wavesynth->getPhaseChain())
-	{
-		if(phaseChain->shouldBeProcessedAtAll())
-		{
-			// Get modulation value at voice start
-			float modValue = phaseChain->getConstantVoiceValue(voiceIndex);
-			phase = jlimit<double>(0.0, 1.0, phase + modValue);
-		}
-	}
 	
 	leftGenerator.sync(phase);
         
