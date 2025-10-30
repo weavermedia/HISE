@@ -298,12 +298,9 @@ public:
 		return mb.getConstantModulationValue();
 	}
 
-	float getPhaseModValue(int voiceIndex) const
-	{
-		auto& mb = modChains[ChainIndex::PhaseChain];
-		float modValue = mb.getConstantVoiceValue(voiceIndex);
-		return jlimit(0.0f, 1.0f, startPhase + modValue);
-	}
+	float getStartPhaseValue() const noexcept { return startPhase; }
+
+	ModulatorChain* getPhaseChain() const noexcept { return phaseChain; }
 
 	bool isHardSyncEnabled() const { return hardSync; }
 

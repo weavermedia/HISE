@@ -427,7 +427,18 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 
 	// Apply phase modulation
 	auto wavesynth = static_cast<WaveSynth*>(getOwnerSynth());
-	double phase = wavesynth->getPhaseModValue(voiceIndex);
+	double phase = wavesynth->getStartPhaseValue();
+
+	// Add modulation from phase chain
+	if(auto phaseChain = wavesynth->getPhaseChain())
+	{
+		if(phaseChain->shouldBeProcessedAtAll())
+		{
+			// Get modulation value at voice start
+			float modValue = phaseChain->getConstantVoiceValue(voiceIndex);
+			phase = jlimit<double>(0.0, 1.0, phase + modValue);
+		}
+	}
 	
 	leftGenerator.sync(phase);
         
