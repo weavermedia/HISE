@@ -431,17 +431,28 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 
 	// Get timing offset
 	double startOffsetSamples = (double)getCurrentHiseEvent().getStartOffset();
-	double freq1Hz = cyclesPerSecond * octaveTransposeFactor1;
-	double timingPhase1 = (startOffsetSamples / getSampleRate()) * freq1Hz;
 
-	// Apply user phase offset + timing offset
-	leftGenerator.sync(std::fmod(phase1 + timingPhase1, 1.0));
-
-	if(enableSecondOsc)
+	// Fast path when phase is default and for backwards-compatibility
+	if(phase1 == 0.0f && phase2 == 0.0f)
 	{
-		double freq2Hz = cyclesPerSecond * octaveTransposeFactor2;
-		double timingPhase2 = (startOffsetSamples / getSampleRate()) * freq2Hz;
-		rightGenerator.sync(std::fmod(phase2 + timingPhase2, 1.0));
+		leftGenerator.setStartOffset(startOffsetSamples);
+
+		if(enableSecondOsc)
+			rightGenerator.setStartOffset(startOffsetSamples);
+	}
+	else
+	{
+		// Apply user phase + timing offset
+		double freq1Hz = cyclesPerSecond * octaveTransposeFactor1;
+		double timingPhase1 = (startOffsetSamples / getSampleRate()) * freq1Hz;
+		leftGenerator.sync(std::fmod(phase1 + timingPhase1, 1.0));
+
+		if(enableSecondOsc)
+		{
+			double freq2Hz = cyclesPerSecond * octaveTransposeFactor2;
+			double timingPhase2 = (startOffsetSamples / getSampleRate()) * freq2Hz;
+			rightGenerator.sync(std::fmod(phase2 + timingPhase2, 1.0));
+		}
 	}
 
 #else
