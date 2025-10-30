@@ -1520,6 +1520,7 @@ void ScriptingApi::Engine::addModuleStateToUserPreset(var moduleId)
 
 	auto childList = ProcessorHelpers::getListOfAllProcessors<Processor>(p);
 
+#if 0
 	for (auto c : childList)
 	{
 		if (c == p)
@@ -1531,6 +1532,7 @@ void ScriptingApi::Engine::addModuleStateToUserPreset(var moduleId)
 			return;
 		}
 	}
+#endif
 
 	bool wasRemoved = false;
 
@@ -7938,8 +7940,8 @@ ScriptingApi::Server::Server(JavascriptProcessor* jp_):
 	addConstant("StatusAuthenticationFail", StatusAuthenticationFail);
 
 	ADD_API_METHOD_1(setBaseURL);
-	ADD_TYPED_API_METHOD_3(callWithPOST, VarTypeChecker::String, VarTypeChecker::JSON, VarTypeChecker::Function);
-	ADD_TYPED_API_METHOD_3(callWithGET, VarTypeChecker::String, VarTypeChecker::JSON, VarTypeChecker::Function);
+	ADD_TYPED_API_METHOD_3(callWithPOST, VarTypeChecker::String, VarTypeChecker::ComplexType, VarTypeChecker::Function);
+	ADD_TYPED_API_METHOD_3(callWithGET, VarTypeChecker::String, VarTypeChecker::ComplexType, VarTypeChecker::Function);
 	ADD_TYPED_API_METHOD_1(setHttpHeader, VarTypeChecker::String);
     ADD_TYPED_API_METHOD_4(downloadFile, VarTypeChecker::String, VarTypeChecker::JSON, VarTypeChecker::ScriptObject, VarTypeChecker::Function);
 	ADD_API_METHOD_0(getPendingDownloads);
