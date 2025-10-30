@@ -205,7 +205,6 @@ float WaveSynth::getDefaultValue(int parameterIndex) const
 	case EnableSecondOscillator: return 1.0f;
 	case PulseWidth1:			return 0.5f;
 	case PulseWidth2:			return 0.5f;
-	case HardSync:				return 0.0f;
 	case StartPhase1:			return 0.0f;
 	case StartPhase2:			return 0.0f;
 	default:					jassertfalse; return -1.0f;
@@ -425,11 +424,10 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 	if(enableSecondOsc)
 		rightGenerator.setFrequency(cyclesPerSecond * octaveTransposeFactor2);
 
-	// Apply phase offset
 	auto wavesynth = static_cast<WaveSynth*>(getOwnerSynth());
 	double phase1 = wavesynth->getStartPhaseValue(true);
 	double phase2 = wavesynth->getStartPhaseValue(false);
-	
+
 	leftGenerator.sync(phase1);
         
 	if(enableSecondOsc)
