@@ -50,12 +50,14 @@ WaveSynth::WaveSynth(MainController *mc, const String &id, int numVoices) :
 	mix(getDefaultValue(Mix)),
 	pulseWidth1(getDefaultValue(PulseWidth1)),
 	pulseWidth2(getDefaultValue(PulseWidth2)),
+	startPhase(getDefaultValue(StartPhase)),
 	waveForm1(WaveformComponent::Saw),
 	waveForm2(WaveformComponent::Saw),
     tempBuffer(2, 0)
 {
 	modChains += { this, "Mix Modulation", ModulatorChain::ModulationType::Normal, Modulation::Mode::CombinedMode };
 	modChains += { this, "Osc2 Pitch Modulation", ModulatorChain::ModulationType::Normal, Modulation::PitchMode};
+	modChains += { this, "Phase Modulation", ModulatorChain::ModulationType::VoiceStart, Modulation::Mode::GainMode};
 
 	finaliseModChains();
 
@@ -68,6 +70,7 @@ WaveSynth::WaveSynth(MainController *mc, const String &id, int numVoices) :
 
 	mixChain = modChains[ChainIndex::MixChain].getChain();
 	osc2pitchChain = modChains[ChainIndex::Osc2PitchIndex].getChain();
+	phaseChain = modChains[ChainIndex::PhaseChain].getChain();
 
 	scaleFunction = [](float input) { return input * 2.0f - 1.0f; };
 
@@ -86,6 +89,7 @@ WaveSynth::WaveSynth(MainController *mc, const String &id, int numVoices) :
 	parameterNames.add("HardSync");
     parameterNames.add("SemiTones1");
     parameterNames.add("SemiTones2");
+	parameterNames.add("StartPhase");
 
 	updateParameterSlots();
 
@@ -120,6 +124,7 @@ void WaveSynth::restoreFromValueTree(const ValueTree &v)
 	loadAttribute(PulseWidth1, "PulseWidth1");
 	loadAttribute(PulseWidth2, "PulseWidth2");
 	loadAttribute(HardSync, "HardSync");
+	loadAttribute(StartPhase, "StartPhase");
 }
 
 ValueTree WaveSynth::exportAsValueTree() const
@@ -141,6 +146,7 @@ ValueTree WaveSynth::exportAsValueTree() const
 	saveAttribute(PulseWidth1, "PulseWidth1");
 	saveAttribute(PulseWidth2, "PulseWidth2");
 	saveAttribute(HardSync, "HardSync");
+	saveAttribute(StartPhase, "StartPhase");
 
 	return v;
 }
@@ -155,6 +161,7 @@ Processor * WaveSynth::getChildProcessor(int processorIndex)
 	case PitchModulation:	return pitchChain;
 	case MixModulation:		return mixChain;
 	case Osc2PitchChain:    return osc2pitchChain;
+	case PhaseModulation:   return phaseChain;
 	case MidiProcessor:		return midiProcessorChain;
 	case EffectChain:		return effectChain;
 	default:				jassertfalse; return nullptr;
@@ -171,6 +178,7 @@ const Processor * WaveSynth::getChildProcessor(int processorIndex) const
 	case PitchModulation:	return pitchChain;
 	case MixModulation:		return mixChain;
 	case Osc2PitchChain:    return osc2pitchChain;
+	case PhaseModulation:   return phaseChain;
 	case MidiProcessor:		return midiProcessorChain;
 	case EffectChain:		return effectChain;
 	default:				jassertfalse; return nullptr;
@@ -197,6 +205,8 @@ float WaveSynth::getDefaultValue(int parameterIndex) const
 	case EnableSecondOscillator: return 1.0f;
 	case PulseWidth1:			return 0.5f;
 	case PulseWidth2:			return 0.5f;
+	case HardSync:				return 0.0f;
+	case StartPhase:			return 0.0f;
 	default:					jassertfalse; return -1.0f;
 	}
 }
@@ -255,6 +265,7 @@ float WaveSynth::getAttribute(int parameterIndex) const
 	case PulseWidth1:			return (float)pulseWidth1;
 	case PulseWidth2:			return (float)pulseWidth2;
 	case HardSync:				return hardSync ? 1.0f : 0.0f;
+	case StartPhase:			return startPhase;
 	default:					jassertfalse; return -1.0f;
 	}
 }
@@ -303,6 +314,10 @@ void WaveSynth::setInternalAttribute(int parameterIndex, float newValue)
 	case PulseWidth1:			pulseWidth1 = jlimit<float>(0.0f, 1.0f, newValue); refreshPulseWidth(true); break;
 	case PulseWidth2:			pulseWidth2 = jlimit<float>(0.0f, 1.0f, newValue); refreshPulseWidth(false); break;
 	case HardSync:				hardSync = newValue > 0.5f; break;
+	case StartPhase:
+		startPhase = jlimit<float>(0.0f, 1.0f, newValue);
+		modChains[PhaseChain].getChain()->setInitialValue(newValue);
+		break;
 	default:					jassertfalse;
 		break;
 	}
@@ -410,10 +425,14 @@ void WaveSynthVoice::startNote(int midiNoteNumber, float /*velocity*/, Synthesis
 	if(enableSecondOsc)
 		rightGenerator.setFrequency(cyclesPerSecond * octaveTransposeFactor2);
 
-	leftGenerator.setStartOffset((double)getCurrentHiseEvent().getStartOffset());
+	// Apply phase modulation
+	auto wavesynth = static_cast<WaveSynth*>(getOwnerSynth());
+	double phase = wavesynth->getPhaseModValue(voiceIndex);
+	
+	leftGenerator.sync(phase);
         
 	if(enableSecondOsc)
-		rightGenerator.setStartOffset((double)getCurrentHiseEvent().getStartOffset());
+		rightGenerator.sync(phase);
 
 #else
 

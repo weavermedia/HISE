@@ -205,7 +205,8 @@ public:
 		GainChain=0,
 		PitchChain,
 		MixChain,
-		Osc2PitchIndex
+		Osc2PitchIndex,
+		PhaseChain
 	};
 
 	enum AdditionalWaveformTypes
@@ -234,6 +235,7 @@ public:
 		HardSync, ///< **Off** ... On | Syncs the second oscillator to the first
 		SemiTones1, ///< -12 ... **0** ... 12 | The semitone transpose amount for the first Oscillator.
 		SemiTones2, ///< -12 ... **0** ... 12 | The semitone transpose amount for the second Oscillator.
+		StartPhase, ///< 0% ... **0%** ... 100% | The initial phase offset for the oscillators.
 		numWaveSynthParameters
 	};
 
@@ -241,6 +243,7 @@ public:
 	{
 		MixModulation = ModulatorSynth::numInternalChains,
 		Osc2PitchChain,
+		PhaseModulation,
 		numInternalChains
 	};
 
@@ -274,6 +277,9 @@ public:
 		if(parameterIndex == SpecialParameters::Mix)
 			return new ModulatorChain::GetModulationOutput<(int)InternalChains::MixModulation>();
 
+		if(parameterIndex == SpecialParameters::StartPhase)
+			return new ModulatorChain::GetModulationOutput<(int)InternalChains::PhaseModulation>();
+
 		return ModulatorSynth::getModulationQueryFunction(parameterIndex);
 	}
 
@@ -290,6 +296,13 @@ public:
 	{
 		auto& mb = modChains[ChainIndex::Osc2PitchIndex];
 		return mb.getConstantModulationValue();
+	}
+
+	float getPhaseModValue(int voiceIndex) const
+	{
+		auto& mb = modChains[ChainIndex::PhaseChain];
+		float modValue = mb.getConstantVoiceValue(voiceIndex);
+		return jlimit(0.0f, 1.0f, startPhase + modValue);
 	}
 
 	bool isHardSyncEnabled() const { return hardSync; }
@@ -332,6 +345,7 @@ private:
 
 	ModulatorChain* mixChain;
 	ModulatorChain* osc2pitchChain;
+	ModulatorChain* phaseChain;
 
 	AudioSampleBuffer tempBuffer;
 
@@ -345,6 +359,8 @@ private:
 	float detune1, detune2;
 
 	double pulseWidth1, pulseWidth2;
+
+	float startPhase;
 
 	bool hardSync = false;
 
