@@ -498,17 +498,17 @@ private:
 
 class MainController;
 
-class AutoSaver : private Timer
+class AutoSaver : private Timer, public ProjectHandler::Listener
 {
 public:
 
-	
-
-	AutoSaver(MainController *mc_);;
-
-	
+	AutoSaver(MainController *mc_);
+	~AutoSaver();
 
 	void updateAutosaving();
+
+	// ProjectHandler::Listener interface
+	void projectChanged(const File& newRootDirectory) override;
 
 private:
 

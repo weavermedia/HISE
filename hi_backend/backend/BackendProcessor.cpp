@@ -322,6 +322,7 @@ void PluginParameterRamp::bump(PluginParameterSimulatorInfo& info, double milliS
 	
 	clearPreset(dontSendNotification);
 	getSampleManager().getProjectHandler().addListener(this);
+	getSampleManager().getProjectHandler().addListener(&getAutoSaver());
 
 	createInterface(600, 500);
 
@@ -1032,5 +1033,3 @@ Result BackendProcessor::setAnalysedProcessor(AnalyserInfo::Ptr newInfo, bool ad
 	return Result::ok();
 }
 } // namespace hise
-
-

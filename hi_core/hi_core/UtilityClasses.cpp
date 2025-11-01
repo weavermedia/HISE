@@ -146,6 +146,22 @@ AutoSaver::AutoSaver(MainController* mc_):
 		
 }
 
+AutoSaver::~AutoSaver()
+{
+#if USE_BACKEND
+	if (mc != nullptr && mc->getMainSynthChain() != nullptr)
+	{
+		GET_PROJECT_HANDLER(mc->getMainSynthChain()).removeListener(this);
+	}
+#endif
+}
+
+void AutoSaver::projectChanged(const File& newRootDirectory)
+{
+	fileList.clear();
+	currentAutoSaveIndex = 0;
+}
+
 void AutoSaver::updateAutosaving()
 {
 	if (isAutoSaving()) enableAutoSaving();
