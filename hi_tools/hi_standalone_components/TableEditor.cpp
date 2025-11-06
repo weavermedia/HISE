@@ -406,6 +406,14 @@ void TableEditor::mouseDown(const MouseEvent &e)
 	
 	if(e.mods.isRightButtonDown() || e.mods.isCommandDown())
 	{
+		if (dp != nullptr)
+		{
+			removeDragPoint(dp);
+
+			if (editedTable.get() != nullptr)
+				editedTable->sendGraphUpdateMessage();
+		}
+
 		lastRightDragValue = (float)e.getPosition().getY();
 	}
 	else
