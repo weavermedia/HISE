@@ -87,6 +87,12 @@ public:
 	virtual void setKeyWidthBase(float w) = 0;
 
 	virtual void setShowOctaveNumber(bool /*shouldShow*/) {};
+	virtual void setOctaveTextHeight(float /*height*/) {};
+	virtual float getOctaveTextHeight() const { return 0.0f; }
+	virtual void setOctaveTextMargin(float /*margin*/) {};
+	virtual float getOctaveTextMargin() const { return 0.0f; }
+	virtual void setOctaveTextColour(Colour /*colour*/) {};
+	virtual Colour getOctaveTextColour() const { return Colours::transparentBlack; }
 	virtual void setBlackNoteLengthProportionBase(float /*ratio*/) {};
 	virtual void setEnableToggleMode(bool /*isOn*/) {};
 	virtual void setMidiChannelBase(int /*midiChannel*/) = 0;
@@ -124,6 +130,24 @@ public:
 
 	void setShowOctaveNumber(bool shouldDisplayOctaveNumber) override { displayOctaveNumber = shouldDisplayOctaveNumber; }
 	bool isShowingOctaveNumbers() const override { return displayOctaveNumber; }
+
+	/** Set the octave number text height (font size) */
+	void setOctaveTextHeight(float height) override { octaveTextHeight = height; }
+
+	/** Get the octave number text height */
+	float getOctaveTextHeight() const override { return octaveTextHeight; }
+
+	/** Set the octave number text margin (gap from edges) */
+	void setOctaveTextMargin(float margin) override { octaveTextMargin = margin; }
+
+	/** Get the octave number text margin */
+	float getOctaveTextMargin() const override { return octaveTextMargin; }
+
+	/** Set the octave number text colour (transparent = use default) */
+	void setOctaveTextColour(Colour colour) override { octaveTextColour = colour; }
+
+	/** Get the octave number text colour */
+	Colour getOctaveTextColour() const override { return octaveTextColour; }
 
 	void setLowestKeyBase(int lowKey_) override { setLowestVisibleKey(lowKey_); }
 
@@ -196,6 +220,9 @@ private:
 	int hiKey = 127;
 
 	bool displayOctaveNumber = false;
+	float octaveTextHeight = 0.0f;
+	float octaveTextMargin = 0.0f;
+	Colour octaveTextColour = Colours::transparentBlack; // transparent = use default
 
 	bool toggleMode = false;
 
