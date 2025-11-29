@@ -327,9 +327,40 @@ void CustomKeyboard::drawWhiteNote(int midiNoteNumber, Graphics &g, Rectangle<fl
 
 	if (displayOctaveNumber && midiNoteNumber % 12 == 0)
 	{
-		g.setFont(GLOBAL_BOLD_FONT().withHeight((float)w / 1.5f));
-        g.setColour(Colours::darkgrey);
-		g.drawText(MidiMessage::getMidiNoteName(midiNoteNumber, true, true, 3), x, (h*3)/4, w, h / 4, Justification::centred);
+		// Use custom font if set, otherwise use default
+		Font font;
+		if (octaveTextFontName.isNotEmpty())
+		{
+			// Look up custom font by name
+			float fontSize = (octaveTextHeight > 0.0f) ? octaveTextHeight : ((float)w / 1.5f);
+			font = mc->getFontFromString(octaveTextFontName, fontSize);
+		}
+		else
+		{
+			// Use default font with custom height if set, otherwise use default height
+			float fontSize = (octaveTextHeight > 0.0f) ? octaveTextHeight : ((float)w / 1.5f);
+			font = GLOBAL_BOLD_FONT().withHeight(fontSize);
+		}
+		g.setFont(font);
+
+		// Use custom text colour if set (not transparent), otherwise use default
+		Colour textColour = (octaveTextColour.isTransparent()) ? Colours::darkgrey : octaveTextColour;
+		g.setColour(textColour);
+
+		// Use custom margin if set, otherwise use default positioning
+		if (octaveTextMargin > 0.0f)
+		{
+			// Position text at bottom with custom margin
+			float textHeight = font.getHeight();
+			float textY = h - textHeight - octaveTextMargin;
+			textY = jmax(0.0f, textY); // Ensure text doesn't go above the key
+			g.drawText(MidiMessage::getMidiNoteName(midiNoteNumber, true, true, 3), x, textY, w, textHeight, Justification::centred);
+		}
+		else
+		{
+			// Use default positioning
+			g.drawText(MidiMessage::getMidiNoteName(midiNoteNumber, true, true, 3), x, (h*3)/4, w, h / 4, Justification::centred);
+		}
 	}
 	
 }

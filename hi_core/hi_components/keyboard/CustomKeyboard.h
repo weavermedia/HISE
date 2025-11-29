@@ -87,6 +87,14 @@ public:
 	virtual void setKeyWidthBase(float w) = 0;
 
 	virtual void setShowOctaveNumber(bool /*shouldShow*/) {};
+	virtual void setOctaveTextHeight(float /*height*/) {};
+	virtual float getOctaveTextHeight() const { return 0.0f; }
+	virtual void setOctaveTextMargin(float /*margin*/) {};
+	virtual float getOctaveTextMargin() const { return 0.0f; }
+	virtual void setOctaveTextColour(Colour /*colour*/) {};
+	virtual Colour getOctaveTextColour() const { return Colours::transparentBlack; }
+	virtual void setOctaveTextFont(const String& /*fontName*/) {};
+	virtual String getOctaveTextFont() const { return String(); }
 	virtual void setBlackNoteLengthProportionBase(float /*ratio*/) {};
 	virtual void setEnableToggleMode(bool /*isOn*/) {};
 	virtual void setMidiChannelBase(int /*midiChannel*/) = 0;
@@ -125,6 +133,18 @@ public:
 
 	void setShowOctaveNumber(bool shouldDisplayOctaveNumber) override { displayOctaveNumber = shouldDisplayOctaveNumber; }
 	bool isShowingOctaveNumbers() const override { return displayOctaveNumber; }
+
+	void setOctaveTextHeight(float height) override { octaveTextHeight = height; }
+	float getOctaveTextHeight() const override { return octaveTextHeight; }
+
+	void setOctaveTextMargin(float margin) override { octaveTextMargin = margin; }
+	float getOctaveTextMargin() const override { return octaveTextMargin; }
+
+	void setOctaveTextColour(Colour colour) override { octaveTextColour = colour; }
+	Colour getOctaveTextColour() const override { return octaveTextColour; }
+
+	void setOctaveTextFont(const String& fontName) override { octaveTextFontName = fontName; }
+	String getOctaveTextFont() const override { return octaveTextFontName; }
 
 	void setLowestKeyBase(int lowKey_) override { setLowestVisibleKey(lowKey_); }
 
@@ -197,6 +217,10 @@ private:
 	int hiKey = 127;
 
 	bool displayOctaveNumber = false;
+	float octaveTextHeight = 0.0f;
+	float octaveTextMargin = 0.0f;
+	Colour octaveTextColour = Colours::transparentBlack; // transparent = use default
+	String octaveTextFontName; // empty string = use default
 
 	bool toggleMode = false;
 
