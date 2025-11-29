@@ -1,9 +1,10 @@
 name: Build Mac
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - meatbeats
+  # Disabled automatic builds on push - can be manually triggered via Actions tab
+  # push:
+  #   branches:
+  #     - meatbeats
 jobs:
   build_mac:
     runs-on: macos-latest
