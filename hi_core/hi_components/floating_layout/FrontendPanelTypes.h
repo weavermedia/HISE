@@ -242,6 +242,7 @@ public:
 		OctaveTextHeight, ///< the font height for octave numbers (0.0 = use default)
 		OctaveTextMargin, ///< the margin from bottom edge for octave numbers (0.0 = use default)
 		OctaveTextColour, ///< the text colour for octave numbers (transparent = use default)
+		OctaveTextFont, ///< the font for octave numbers (empty string = use default)
 		ToggleMode, ///< if activated, then the notes will be held until clicked again
 		MidiChannel, ///< which MIDI channel to use (1-16)
 		MPEKeyboard,

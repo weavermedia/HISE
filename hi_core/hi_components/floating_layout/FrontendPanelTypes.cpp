@@ -573,6 +573,7 @@ var MidiKeyboardPanel::toDynamicObject() const
 	storePropertyInObject(obj, SpecialPanelIds::OctaveTextHeight, keyboard->getOctaveTextHeight());
 	storePropertyInObject(obj, SpecialPanelIds::OctaveTextMargin, keyboard->getOctaveTextMargin());
 	storePropertyInObject(obj, SpecialPanelIds::OctaveTextColour, (int64)keyboard->getOctaveTextColour().getARGB());
+	storePropertyInObject(obj, SpecialPanelIds::OctaveTextFont, keyboard->getOctaveTextFont());
 	storePropertyInObject(obj, SpecialPanelIds::LowKey, keyboard->getRangeStartBase());
 	storePropertyInObject(obj, SpecialPanelIds::HiKey, keyboard->getRangeEndBase());
 	storePropertyInObject(obj, SpecialPanelIds::CustomGraphics, keyboard->isUsingCustomGraphics());
@@ -647,6 +648,15 @@ void MidiKeyboardPanel::restoreInternal(const var& object)
 		}
 	}
 	keyboard->setOctaveTextColour(textColour);
+
+	// Handle font property - stored as font name string (empty string = use default)
+	auto fontVar = getPropertyWithDefault(object, SpecialPanelIds::OctaveTextFont);
+	String fontName;
+	if (fontVar.isString())
+	{
+		fontName = fontVar.toString();
+	}
+	keyboard->setOctaveTextFont(fontName);
 	keyboard->setBlackNoteLengthProportionBase(getPropertyWithDefault(object, SpecialPanelIds::BlackKeyRatio));
 	keyboard->setEnableToggleMode(getPropertyWithDefault(object, SpecialPanelIds::ToggleMode));
 	keyboard->setMidiChannelBase(getPropertyWithDefault(object, SpecialPanelIds::MidiChannel));
@@ -703,6 +713,7 @@ Identifier MidiKeyboardPanel::getDefaultablePropertyId(int index) const
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::OctaveTextHeight, "OctaveTextHeight");
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::OctaveTextMargin, "OctaveTextMargin");
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::OctaveTextColour, "OctaveTextColour");
+	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::OctaveTextFont, "OctaveTextFont");
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::ToggleMode, "ToggleMode");
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::MidiChannel, "MidiChannel");
 	RETURN_DEFAULT_PROPERTY_ID(index, SpecialPanelIds::MPEKeyboard, "MPEKeyboard");
@@ -730,6 +741,7 @@ var MidiKeyboardPanel::getDefaultProperty(int index) const
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::OctaveTextHeight, 0.0f);
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::OctaveTextMargin, 0.0f);
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::OctaveTextColour, (int64)Colours::transparentBlack.getARGB());
+	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::OctaveTextFont, String());
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::ToggleMode, false);
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::MidiChannel, 1);
 	RETURN_DEFAULT_PROPERTY(index, SpecialPanelIds::MPEKeyboard, false);

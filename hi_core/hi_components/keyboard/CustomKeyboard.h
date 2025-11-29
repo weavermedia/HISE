@@ -93,6 +93,8 @@ public:
 	virtual float getOctaveTextMargin() const { return 0.0f; }
 	virtual void setOctaveTextColour(Colour /*colour*/) {};
 	virtual Colour getOctaveTextColour() const { return Colours::transparentBlack; }
+	virtual void setOctaveTextFont(const String& /*fontName*/) {};
+	virtual String getOctaveTextFont() const { return String(); }
 	virtual void setBlackNoteLengthProportionBase(float /*ratio*/) {};
 	virtual void setEnableToggleMode(bool /*isOn*/) {};
 	virtual void setMidiChannelBase(int /*midiChannel*/) = 0;
@@ -139,6 +141,9 @@ public:
 
 	void setOctaveTextColour(Colour colour) override { octaveTextColour = colour; }
 	Colour getOctaveTextColour() const override { return octaveTextColour; }
+
+	void setOctaveTextFont(const String& fontName) override { octaveTextFontName = fontName; }
+	String getOctaveTextFont() const override { return octaveTextFontName; }
 
 	void setLowestKeyBase(int lowKey_) override { setLowestVisibleKey(lowKey_); }
 
@@ -214,6 +219,7 @@ private:
 	float octaveTextHeight = 0.0f;
 	float octaveTextMargin = 0.0f;
 	Colour octaveTextColour = Colours::transparentBlack; // transparent = use default
+	String octaveTextFontName; // empty string = use default
 
 	bool toggleMode = false;
 

@@ -299,9 +299,20 @@ void CustomKeyboard::drawWhiteNote(int midiNoteNumber, Graphics &g, Rectangle<fl
 
 	if (displayOctaveNumber && midiNoteNumber % 12 == 0)
 	{
-		// Use custom text height if set, otherwise use default
-		float fontSize = (octaveTextHeight > 0.0f) ? octaveTextHeight : ((float)w / 1.5f);
-		Font font = GLOBAL_BOLD_FONT().withHeight(fontSize);
+		// Use custom font if set, otherwise use default
+		Font font;
+		if (octaveTextFontName.isNotEmpty())
+		{
+			// Look up custom font by name
+			float fontSize = (octaveTextHeight > 0.0f) ? octaveTextHeight : ((float)w / 1.5f);
+			font = mc->getFontFromString(octaveTextFontName, fontSize);
+		}
+		else
+		{
+			// Use default font with custom height if set, otherwise use default height
+			float fontSize = (octaveTextHeight > 0.0f) ? octaveTextHeight : ((float)w / 1.5f);
+			font = GLOBAL_BOLD_FONT().withHeight(fontSize);
+		}
 		g.setFont(font);
 
 		// Use custom text colour if set (not transparent), otherwise use default
