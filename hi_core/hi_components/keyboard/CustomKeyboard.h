@@ -131,22 +131,13 @@ public:
 	void setShowOctaveNumber(bool shouldDisplayOctaveNumber) override { displayOctaveNumber = shouldDisplayOctaveNumber; }
 	bool isShowingOctaveNumbers() const override { return displayOctaveNumber; }
 
-	/** Set the octave number text height (font size) */
 	void setOctaveTextHeight(float height) override { octaveTextHeight = height; }
-
-	/** Get the octave number text height */
 	float getOctaveTextHeight() const override { return octaveTextHeight; }
 
-	/** Set the octave number text margin (gap from edges) */
 	void setOctaveTextMargin(float margin) override { octaveTextMargin = margin; }
-
-	/** Get the octave number text margin */
 	float getOctaveTextMargin() const override { return octaveTextMargin; }
 
-	/** Set the octave number text colour (transparent = use default) */
 	void setOctaveTextColour(Colour colour) override { octaveTextColour = colour; }
-
-	/** Get the octave number text colour */
 	Colour getOctaveTextColour() const override { return octaveTextColour; }
 
 	void setLowestKeyBase(int lowKey_) override { setLowestVisibleKey(lowKey_); }
