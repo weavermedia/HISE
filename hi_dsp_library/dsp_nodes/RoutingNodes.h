@@ -370,6 +370,7 @@ struct public_mod
 
 	public_mod()
 	{
+		cppgen::CustomNodeProperties::setPropertyForObject(*this, PropertyIds::OutsideSignalPath);
 		cppgen::CustomNodeProperties::setPropertyForObject(*this, PropertyIds::IsPublicMod);
 	}
 
@@ -746,6 +747,7 @@ template <int NV, typename CableType> struct receive: public receive_base
 	void createParameters(ParameterDataList& data)
 	{
 		DEFINE_PARAMETERDATA(receive, Feedback);
+		p.info.textConverter = parameter::pod::NormalizedPercentage;
 		data.add(p);
 	}
 
@@ -1162,7 +1164,8 @@ public runtime_target::indexable_target<IndexType, runtime_target::RuntimeTarget
     SN_ADD_SET_VALUE(global_cable);
     
     global_cable():
-    control::pimpl::parameter_node_base<ParameterClass>(getStaticId())
+    control::pimpl::parameter_node_base<ParameterClass>(getStaticId()),
+	control::pimpl::no_processing(getStaticId())
     {
         
     };

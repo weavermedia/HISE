@@ -112,7 +112,7 @@ template <typename ParameterClass> struct xy :
 {
 	SN_NODE_ID("xy");
 	SN_GET_SELF_AS_OBJECT(xy);
-	SN_PARAMETER_NODE_CONSTRUCTOR(xy, ParameterClass);
+	SN_PARAMETER_NOSIGNAL_CONSTRUCTOR(xy, ParameterClass);
 	
 
 	enum class Parameters
@@ -1434,13 +1434,14 @@ namespace dynamic
 			addAndMakeVisible(modValue);
 			addAndMakeVisible(activeValue);
 
-			modValue.textFunction = getAxis;
-			activeValue.textFunction = getAxis;
+			modValue.textFunction = BIND_MEMBER_FUNCTION_1(envelope_display_base::getAxis);
+			activeValue.textFunction = BIND_MEMBER_FUNCTION_1(envelope_display_base::getAxis);
 		};
 
-		static String getAxis(int index)
+		String getAxis(int index)
 		{
-			return index == 0 ? "CV" : "GT";
+			auto id = getObject()->getId();
+			return cppgen::CustomNodeProperties::getModOutputs(id)[index];
 		}
 
 		Dragger modValue, activeValue;
