@@ -109,6 +109,7 @@ void FullEditor::loadSettings(const File& sFile)
     
     editor.showStickyLines = s.getProperty(TextEditorSettings::ShowStickyLines, true);
     editor.enableCmdScrollFontResize = s.getProperty(TextEditorSettings::EnableCmdScrollFontResize, true);
+    editor.enableHorizontalScrollPastLineEnds = s.getProperty(TextEditorSettings::EnableHorizontalScrollPastLineEnds, true);
 }
 
 void FullEditor::saveSetting(Component* c, const Identifier& id, const var& newValue)
@@ -146,6 +147,10 @@ void FullEditor::saveSetting(Component* c, const Identifier& id, const var& newV
     if (id == TextEditorSettings::EnableCmdScrollFontResize)
     {
         pe->editor.enableCmdScrollFontResize = (bool)newValue;
+		}
+    if (id == TextEditorSettings::EnableHorizontalScrollPastLineEnds)
+    {
+        pe->editor.enableHorizontalScrollPastLineEnds = (bool)newValue;
     }
 	if (id == TextEditorSettings::LineBreaks)
 	{

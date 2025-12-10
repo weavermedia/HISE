@@ -33,6 +33,7 @@ namespace TextEditorSettings
     DECLARE_ID(ShowStickyLines);
     DECLARE_ID(FixWeirdTab);
     DECLARE_ID(EnableCmdScrollFontResize);
+    DECLARE_ID(EnableHorizontalScrollPastLineEnds);
 }
 
 namespace TextEditorShortcuts

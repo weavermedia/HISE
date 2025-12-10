@@ -598,6 +598,7 @@ private:
     bool showAutocompleteAfterDelay = false;
     bool showStickyLines = true;
     bool enableCmdScrollFontResize = true;
+    bool enableHorizontalScrollPastLineEnds = true;
 	
 	Selection currentClosure[2];
 
