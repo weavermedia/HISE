@@ -101,7 +101,7 @@ namespace control
 		SN_PARAMETER_NOSIGNAL_CONSTRUCTOR(sliderbank, ParameterClass);
 		SN_DESCRIPTION("Scale a value with a slider pack and send it to multiple targets");
 
-		void initialise(NodeBase* n)
+		void initialise(ObjectWithValueTree* n)
 		{
 			this->p.initialise(n);
 		}
@@ -223,7 +223,7 @@ namespace control
 
 		SN_EMPTY_CREATE_PARAM;
 
-		void initialise(NodeBase* n)
+		void initialise(ObjectWithValueTree* n)
 		{
 			if constexpr (prototypes::check::initialise<AnalyserType>::value)
 				analyser.initialise(n);
@@ -1510,7 +1510,7 @@ namespace control
 		};
 		SN_PARAMETER_MEMBER_FUNCTION;
 
-		void initialise(NodeBase* n)
+		void initialise(ObjectWithValueTree* n)
 		{
 			if constexpr (prototypes::check::initialise<LogicType>::value)
 				obj.initialise(n);
@@ -1737,7 +1737,7 @@ namespace control
 			Value
 		};
 
-		void initialise(NodeBase* n) override
+		void initialise(ObjectWithValueTree* n) override
 		{
 			this->getParameter().initialise(n);
 		}
@@ -1825,7 +1825,7 @@ namespace control
 
 		SN_ADD_SET_VALUE(xfader);
 
-		void initialise(NodeBase* n) override
+		void initialise(ObjectWithValueTree* n) override
 		{
 			this->p.initialise(n);
 			fader.initialise(n);
@@ -2744,6 +2744,76 @@ namespace control
 	template <int NV, typename ParameterType> using change = multi_parameter<NV, ParameterType, multilogic::change>;
 	template <int NV, typename ParameterType> using blend = multi_parameter<NV, ParameterType, multilogic::blend>;
 
+	template <typename ParameterClass> struct xy :
+		public pimpl::parameter_node_base<ParameterClass>,
+		public pimpl::no_processing
+	{
+		SN_NODE_ID("xy");
+		SN_DESCRIPTION("A XY-Controller for two parameters");
+		SN_GET_SELF_AS_OBJECT(xy);
+		
+		xy() : 
+		  control::pimpl::parameter_node_base<ParameterClass>(getStaticId()), 
+		  control::pimpl::no_processing(getStaticId()) 
+		{
+			cppgen::CustomNodeProperties::addModOutput(getStaticId(), { "X", "Y" });
+		};
+
+		enum class Parameters
+		{
+			X,
+			Y
+		};
+
+		void initialise(ObjectWithValueTree* n)
+		{
+			this->p.initialise(n);
+
+			if constexpr (!ParameterClass::isStaticList())
+			{
+				this->getParameter().numParameters.storeValue(2, n->getUndoManager());
+				this->getParameter().updateParameterAmount({}, 2);
+			}
+		}
+
+		DEFINE_PARAMETERS
+		{
+			DEF_PARAMETER(X, xy);
+			DEF_PARAMETER(Y, xy);
+		};
+		SN_PARAMETER_MEMBER_FUNCTION;
+
+		void setX(double v)
+		{
+			if (this->getParameter().getNumParameters() > 0)
+				this->getParameter().template call<0>(v);
+		}
+
+		void setY(double v)
+		{
+			if (this->getParameter().getNumParameters() > 1)
+				this->getParameter().template call<1>(v);
+		}
+
+		void createParameters(ParameterDataList& data)
+		{
+			{
+				DEFINE_PARAMETERDATA(xy, X);
+				p.setRange({ 0.0, 1.0 });
+				p.setDefaultValue(0.0);
+				data.add(std::move(p));
+			}
+			{
+				DEFINE_PARAMETERDATA(xy, Y);
+				p.setRange({ -1.0, 1.0 });
+				p.setDefaultValue(0.0);
+				data.add(std::move(p));
+			}
+		}
+
+		JUCE_DECLARE_WEAK_REFERENCEABLE(xy);
+	};
+
 	struct smoothed_parameter_base: public mothernode
 	{
 		virtual ~smoothed_parameter_base() {};
@@ -2794,7 +2864,7 @@ namespace control
 		SN_PARAMETER_MEMBER_FUNCTION;
 
 
-		void initialise(NodeBase* n)
+		void initialise(ObjectWithValueTree* n)
 		{
 			value.initialise(n);
 		}

@@ -66,6 +66,7 @@ Set this to 1 to include the big base 64 database dump.
 #endif
 
 
+
 /** Config: HI_EXPORT_AS_PROJECT_DLL
 
 	Set this to 1 if you compile the project's networks as dll.
@@ -125,7 +126,11 @@ Set this to 1 if you want to embed the libraries created with this module into y
 #endif
 
 
-
+#if !HISE_NO_GUI_TOOLS
+#define HISE_INCLUDE_SCRIPTNODE_UI 1
+#else
+#define HISE_INCLUDE_SCRIPTNODE_UI 0
+#endif
 
 
 
@@ -137,8 +142,12 @@ Set this to 1 if you want to embed the libraries created with this module into y
 
 #include "node_api/helpers/node_macros.h"
 
+#include "node_api/helpers/node_ids.h"
+
 
 #include "snex_basics/snex_Types.h"
+
+#include "node_api/helpers/NodeProperty.h"
 
 #include "snex_basics/snex_TypeHelpers.h"
 
@@ -167,6 +176,9 @@ Set this to 1 if you want to embed the libraries created with this module into y
 #include "dsp_library/BaseFactory.h"
 #include "dsp_library/DspFactory.h"
 
+#include "node_api/helpers/Error.h"
+
+#include "node_api/helpers/ParameterData.h"
 
 #include "dsp_basics/chunkware_simple_dynamics/chunkware_simple_dynamics.h"
 #include "dsp_basics/AllpassDelay.h"
@@ -185,9 +197,7 @@ Set this to 1 if you want to embed the libraries created with this module into y
 #include "fft_convolver/TwoStageFFTConvolver.h"
 #include "dsp_basics/ConvolutionBase.h"
 
-#include "node_api/helpers/Error.h"
-#include "node_api/helpers/node_ids.h"
-#include "node_api/helpers/ParameterData.h"
+
 #include "node_api/helpers/modulation.h"
 
 #include "node_api/helpers/range.h"
@@ -254,6 +264,9 @@ Set this to 1 if you want to embed the libraries created with this module into y
 
 #include "node_api/helpers/UIUpdater.h"
 
+#if HISE_INCLUDE_SCRIPTNODE_UI
+#include "node_ui/node_ui.h"
+#endif
 
 namespace hise {
 	namespace HelperFunctions

@@ -134,6 +134,7 @@ DECLARE_ID(Model);
 DECLARE_ID(HpfFreq);
 DECLARE_ID(BlockSize);
 DECLARE_ID(IsPolyphonic);
+DECLARE_ID(HasFixedParameters);
 DECLARE_ID(UseRingBuffer);
 DECLARE_ID(IsProcessingHiseEvent);
 DECLARE_ID(IsControlNode);
@@ -250,6 +251,22 @@ enum EditType
 
 
 #undef DECLARE_ID
+
+namespace UIValues
+{
+	static constexpr int HeaderHeight = 24;
+	static constexpr int ParameterHeight = 48 + 18 + 20;
+	static constexpr int MacroDragHeight = 20;
+	static constexpr int NodeWidth = 128;
+	static constexpr int NodeHeight = 48;
+	static constexpr int NodeMargin = 10;
+	static constexpr int ZoomOffset = 60;
+	static constexpr int DuplicateSize = 128;
+	static constexpr int PinHeight = 24;
+	static constexpr int TabHeight = 20;
+	static constexpr int GroupHeight = 20;
+	static constexpr int ParameterWidth = 100;
+}
 
 }
 
@@ -681,9 +698,12 @@ struct NodeDatabase
 	{
 		if(auto pd = data->getProjectData())
 		{
+			auto m1 = data->descriptions;
+			auto m2 = pd->descriptions;
+
 			std::map<String, String> combined;
-			combined.merge(data->descriptions);
-			combined.merge(pd->descriptions);
+			combined.merge(m1);
+			combined.merge(m2);
 			return combined;
 		}
 		else

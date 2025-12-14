@@ -18,56 +18,22 @@
 *
 *   Commercial licenses for using HISE in an closed source project are
 *   available on request. Please visit the project's website to get more
-*   information about commercial licensing:
+*   information about commercial licencing:
 *
-*   http://www.hise.audio/
+*   http://www.hartinstruments.net/hise/
 *
 *   HISE is based on the JUCE library,
-*   which must be separately licensed for closed source applications:
+*   which also must be licenced for commercial applications:
 *
 *   http://www.juce.com
 *
 *   ===========================================================================
 */
 
-namespace scriptnode {
-using namespace juce;
-using namespace hise;
+#pragma once
 
-namespace faders
-{
-
-	editor::editor(NodeType* v, PooledUIUpdater* updater_) :
-		ScriptnodeExtraComponent(v, updater_),
-		graph(nullptr, updater_),
-		dragRow(&v->p, updater_)
-	{
-		graph.initialise(v->p.parentNode);
-		addAndMakeVisible(dragRow);
-
-		addAndMakeVisible(graph);
-
-		setSize(256, 24 + 10 + parameter::ui::UIConstants::ButtonHeight + parameter::ui::UIConstants::DragHeight + parameter::ui::UIConstants::GraphHeight + UIValues::NodeMargin);
-
-		setRepaintsOnMouseActivity(true);
-
-		stop();
-	}
-
-	void editor::resized()
-	{
-		auto b = getLocalBounds();
-		graph.setBounds(b.removeFromTop(parameter::ui::UIConstants::GraphHeight + 24 + UIValues::NodeMargin));
-		dragRow.setBounds(b);
-	}
-
-	juce::Component* editor::createExtraComponent(void* obj, PooledUIUpdater* updater)
-	{
-		auto v = static_cast<NodeType*>(obj);
-		return new editor(v, updater);
-	}
-
-}
+#include "complex_ui_laf.h"
+#include "ExtraComponentBase.h"
+#include "UIComponentLibrary.h"
 
 
-}
