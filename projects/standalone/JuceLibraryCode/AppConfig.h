@@ -45,7 +45,7 @@
 
 #define JUCE_USE_DARK_SPLASH_SCREEN 1
 
-#define JUCE_PROJUCER_VERSION 0x60103
+#define JUCE_PROJUCER_VERSION 0x60104
 
 //==============================================================================
 #define JUCE_MODULE_AVAILABLE_hi_backend                  1
@@ -131,6 +131,10 @@
 
 #ifndef    USE_COPY_PROTECTION
  #define   USE_COPY_PROTECTION 0
+#endif
+
+#ifndef    HISE_USE_UNLOCKER_FOR_EXPANSIONS
+ //#define HISE_USE_UNLOCKER_FOR_EXPANSIONS 0
 #endif
 
 #ifndef    USE_SCRIPT_COPY_PROTECTION
@@ -291,6 +295,10 @@
 
 //==============================================================================
 // hi_dsp_library flags:
+
+#ifndef    HISE_INCLUDE_SCRIPTNODE_DATABASE
+ //#define HISE_INCLUDE_SCRIPTNODE_DATABASE 0
+#endif
 
 #ifndef    HI_EXPORT_AS_PROJECT_DLL
  //#define HI_EXPORT_AS_PROJECT_DLL 0
