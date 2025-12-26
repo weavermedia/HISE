@@ -45,19 +45,24 @@ juce::Rectangle<int> FloatingTilePopup::getRectangle(RectangleType t) const
 
 	auto th = hasTitle() ? PopupTitleHeight : 0;
 
+	// MEATBEATS: Remove margins for Interface Preview popup
+	bool isInterfacePreview = content != nullptr && content->getName() == "Interface Preview";
+	int boxMargin = isInterfacePreview ? 0 : BoxMargin;
+	int contentMargin = isInterfacePreview ? 0 : ContentMargin;
+
 	if (t == RectangleType::FullBounds)
-		return b.expanded(BoxMargin + ContentMargin, BoxMargin + ContentMargin + th / 2)
+		return b.expanded(boxMargin + contentMargin, boxMargin + contentMargin + th / 2)
 				.withPosition(0, 0);
 	if (t == RectangleType::ContentBounds)
-		return b.withPosition(BoxMargin + ContentMargin, BoxMargin + ContentMargin + th);
+		return b.withPosition(boxMargin + contentMargin, boxMargin + contentMargin + th);
 	if (t == RectangleType::BoxPath)
-		return b.expanded(ContentMargin, ContentMargin + th/2)
-				.withPosition(BoxMargin, BoxMargin);
+		return b.expanded(contentMargin, contentMargin + th/2)
+				.withPosition(boxMargin, boxMargin);
 	if (t == RectangleType::CloseButton)
 		return getRectangle(RectangleType::FullBounds).removeFromRight(CloseButtonWidth).removeFromTop(CloseButtonWidth);
 	if (t == RectangleType::Title)
 		return getRectangle(RectangleType::BoxPath).removeFromTop(th);
-	
+	// MEATBEATS: end
 	return {};
 }
 
