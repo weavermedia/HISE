@@ -440,6 +440,8 @@ struct XmlBackupFunctions
 
 	static XmlElement* getFirstChildElementWithAttribute(XmlElement* parent, const String& attributeName, const String& value);
 
+	static void normalizePositionProperties(ValueTree& v);
+
 	static void addContentFromSubdirectory(XmlElement& xml, const File& fileToLoad);
 
 	static void extractContentData(XmlElement& xml, const String& interfaceId, const File& xmlFile);
