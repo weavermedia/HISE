@@ -1629,9 +1629,13 @@ void BackendCommandTarget::Actions::testPlugin(const String& pluginToLoad)
 	AudioPluginFormatManager fm;
 	KnownPluginList list;
 
+#if HISE_JUCE8
+	addHeadlessDefaultFormatsToManager(fm);
+#else
 	fm.addDefaultFormats();
 
 	
+#endif
 
 	OwnedArray <PluginDescription> typesFound;
 

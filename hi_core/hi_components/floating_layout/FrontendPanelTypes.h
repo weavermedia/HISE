@@ -781,7 +781,7 @@ protected:
 	Colour itemColour2;
 
 	class ValueSliderColumn : public Component,
-		public SliderListener
+							  public Slider::Listener
 	{
 	public:
 
