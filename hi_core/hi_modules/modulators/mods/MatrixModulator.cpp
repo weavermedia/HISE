@@ -133,7 +133,7 @@ void MatrixModulator::Item::handleScaleDrag(bool isDown, float delta)
 	}
 }
 
-void MatrixModulator::Item::handleDisplayValue(ModulationDisplayValue& mv)
+void MatrixModulator::Item::handleDisplayValue(ModulationDisplayValue& mv, scriptnode::InvertableParameterRange outputRange, double fullRangeFactor)
 {
 	if(!isConnected())
 		return;
@@ -165,19 +165,25 @@ void MatrixModulator::Item::handleDisplayValue(ModulationDisplayValue& mv)
 	}
 	else
 	{
-		mv.addValue += v;
+		auto factor = fullRangeFactor / outputRange.rng.getRange().getLength();
+
+		auto thisIntensity = intensity * factor;
+
+		auto thisV = v * factor;
+
+		mv.addValue += thisV;
 
 		auto minValue = mv.modulationRange.getStart();
 		auto maxValue = mv.modulationRange.getEnd();
 
 		if(isBipolar)
 		{
-			minValue -= intensity;
-			maxValue += intensity;
+			minValue -= thisIntensity;
+			maxValue += thisIntensity;
 		}
 		else
 		{
-			minValue += intensity;
+			minValue += thisIntensity;
 		}
 
 		if(minValue > maxValue)
@@ -432,9 +438,12 @@ ModulationDisplayValue::QueryFunction::Ptr MatrixModulator::getModulationQueryFu
 				return dynamic_cast<MatrixModulator*>(p)->onScaleDrag(isDown, delta);
 			}
 
-			ModulationDisplayValue getDisplayValue(Processor* p, double nv, NormalisableRange<double> nr) const override
+			ModulationDisplayValue getDisplayValue(Processor* p, double nv, NormalisableRange<double> nr, int sourceIndex) const override
 			{
-				return dynamic_cast<MatrixModulator*>(p)->getDisplayValue(nv, nr);
+				auto mm = dynamic_cast<MatrixModulator*>(p);
+
+				ScopedValueSetter<int> sv(mm->displaySourceIndex, sourceIndex);
+				return mm->getDisplayValue(nv, nr);
 			}
 		};
 
@@ -632,8 +641,13 @@ ModulationDisplayValue MatrixModulator::getDisplayValue(double nv, NormalisableR
 
 	mv.modulationRange = { mv.normalisedValue, mv.normalisedValue };
 
-	for(auto i: items)
-		i->handleDisplayValue(mv);
+	auto fullRange = getMode() == Modulation::Mode::PitchMode ? 2.0f : 1.0f;
+
+	for (auto i : items)
+	{
+		if (displaySourceIndex == -1 || i->sourceIndex == displaySourceIndex)
+			i->handleDisplayValue(mv, rangeData.outputRange, fullRange);
+	}
 
 	mv.clipTo0To1();
 

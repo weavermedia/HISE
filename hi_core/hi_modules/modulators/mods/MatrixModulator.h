@@ -91,6 +91,11 @@ public:
 
 	void onModulationDrop(int parameterIndex, int modulationSourceIndex) override;
 
+	float getInactiveModValue() const override 
+	{ 
+		return rangeData.outputRange.convertFrom0to1(baseValue.targetValue, false);
+	}
+
 	String getModulationTargetId(int parameterIndex) const override;
 
 	void setRangeData(const MatrixIds::Helpers::Properties::RangeData& rd)
@@ -140,6 +145,8 @@ public:
 		customTargetId = newId;
 	}
 
+	int displaySourceIndex = -1;
+
 private:
 
 	String customTargetId;
@@ -158,7 +165,7 @@ private:
 
 		void onUpdate(const Identifier& id, const var& newValue);
 		void handleScaleDrag(bool isDown, float delta);
-		void handleDisplayValue(ModulationDisplayValue& mv);
+		void handleDisplayValue(ModulationDisplayValue& mv, scriptnode::InvertableParameterRange outputRange, double rangeFactor);
 		void prepare(double sampleRate, int blockSize, scriptnode::PolyHandler& ph);
 		bool isConnected() const noexcept { return sourceIndex != -1; }
 		SimpleRingBuffer* getRingBuffer() const;

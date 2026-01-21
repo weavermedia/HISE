@@ -326,14 +326,49 @@ struct pod
 	void writeToStream(MemoryOutputStream& b);
 };
 
+struct RefCountedHeapBuffer: public ReferenceCountedObject
+{
+	using Ptr = ReferenceCountedObjectPtr<RefCountedHeapBuffer>;
+
+	RefCountedHeapBuffer(int numBytes):
+		numUsed(numBytes)
+	{
+		if(numUsed > 0)
+			data.calloc(numUsed);
+	}
+
+	Ptr createCopy()
+	{
+		if(getData() != nullptr && getNumBytes() > 0)
+		{
+			Ptr newData = new RefCountedHeapBuffer(numUsed);
+			memcpy(newData->getData(), getData(), getNumBytes());
+			return newData;
+		}
+
+		return nullptr;
+	}
+
+	void* getData() { return data.get(); }
+	size_t getNumBytes() { return numUsed; }
+
+private:
+
+	HeapBlock<uint8> data;
+	int numUsed = 0;
+};
+
 /** Used by the scriptnode interpreter. */
 struct data
 {
 	data();
-	~data() { parameterNames.clear(); }
+	~data() {};
+
 	data(const String& id_);;
 	data(const String& id_, InvertableParameterRange r);
-	data withRange(InvertableParameterRange r);
+	data withRange(InvertableParameterRange r) const;
+
+	data withClonedParameters() const;
 
 	ValueTree createValueTree() const;
 
@@ -377,7 +412,39 @@ struct data
 
 	pod info;
 	dynamic callback;
-	StringArray parameterNames;
+
+	struct ParameterNames
+	{
+		const void* data = nullptr;
+		size_t size = 0;
+
+		StringArray toStringArray() const
+		{
+			StringArray sa;
+
+			if(size != 0 && data != nullptr)
+			{
+				MemoryInputStream mis(data, size, false);
+
+				while (!mis.isExhausted())
+					sa.add(mis.readString());
+			}
+
+			return sa;
+		}
+	};
+
+	ParameterNames getParameterNames() const
+	{
+		if(parameterNames != nullptr)
+			return { parameterNames->getData(), parameterNames->getNumBytes() };
+		else
+			return { nullptr, 0 };
+	}
+
+private:
+
+	RefCountedHeapBuffer::Ptr parameterNames;
 };
 
 /** A Parameter encoder encodes / decodes the parameter data of a node
