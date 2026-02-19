@@ -55,8 +55,9 @@
 namespace hise { using namespace juce;
 
 
-ValueTreeUpdateWatcher::ScopedDelayer::ScopedDelayer(ValueTreeUpdateWatcher* watcher_) :
-	watcher(watcher_)
+ValueTreeUpdateWatcher::ScopedDelayer::ScopedDelayer(ValueTreeUpdateWatcher* watcher_, bool forceMessageThread_) :
+	watcher(watcher_),
+    forceMessageThread(forceMessageThread_)
 {
 	if (watcher != nullptr)
 		watcher->delayCalls = true;
@@ -69,7 +70,19 @@ ValueTreeUpdateWatcher::ScopedDelayer::~ScopedDelayer()
 		watcher->delayCalls = false;
 
 		if (watcher->shouldCallAfterDelay)
-			watcher->callListener();
+		{
+			if (forceMessageThread)
+			{
+				SafeAsyncCall::callAsyncIfNotOnMessageThread<ValueTreeUpdateWatcher>(*watcher, [](ValueTreeUpdateWatcher& w)
+				{
+					w.callListener();
+				});
+			}
+			else
+			{
+				watcher->callListener();
+			}
+		}
 	}
 }
 
@@ -5138,6 +5151,37 @@ void ScriptingApi::Content::ScriptPanel::repaintWrapped()
 	{
 		repaint();
 	}
+}
+
+Result ScriptingApi::Content::ScriptPanel::testCallback(const String& callbackId, const Array<var>& args)
+{
+	if (callbackId == "setMouseCallback")
+	{
+		auto ok = MouseCallbackComponent::validateEventObject(args[0], getScriptObjectProperty(ScriptPanel::allowCallbacks).toString());
+
+		if (!ok.wasOk())
+			return ok;
+
+		return testWithThis(mouseRoutine, args);
+	}
+	if (callbackId == "setPaintRoutine")
+	{
+		var g(new ScriptingObjects::GraphicsObject(getScriptProcessor(), this));
+
+		Array<var> ga;
+		ga.add(g);
+
+		return testWithThis(paintRoutine, ga);
+
+	}
+	if (callbackId == "setTimerCallback")
+		return testWithThis(timerRoutine, args);
+	if (callbackId == "setLoadingCallback")
+		return testWithThis(loadRoutine, args);
+	if (callbackId == "setFileDropCallback")
+		return testWithThis(fileDropRoutine, args);
+
+	return ScriptComponent::testCallback(callbackId, args);
 }
 
 var ScriptingApi::Content::ScriptPanel::addChildPanel()

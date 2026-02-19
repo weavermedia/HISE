@@ -155,7 +155,7 @@ var ScriptingApi::Content::Wrapper::addButton (const var::NativeFunctionArgs& ar
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addButton(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addButton(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addButton()", 3);
@@ -172,7 +172,7 @@ var ScriptingApi::Content::Wrapper::addKnob (const var::NativeFunctionArgs& args
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addKnob(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addKnob(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addKnob()", 3);
@@ -189,7 +189,7 @@ var ScriptingApi::Content::Wrapper::addLabel (const var::NativeFunctionArgs& arg
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addLabel(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addLabel(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addLabel()", 3);
@@ -206,7 +206,7 @@ var ScriptingApi::Content::Wrapper::addComboBox (const var::NativeFunctionArgs& 
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addComboBox(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addComboBox(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addComboBox()", 3);
@@ -223,7 +223,7 @@ var ScriptingApi::Content::Wrapper::addTable (const var::NativeFunctionArgs& arg
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addTable(Identifier(args.arguments[0]), 0,0);
+			return thisObject->addTable(Identifier(args.arguments[0]), -1,-1);
 		}
 
 		CHECK_ARGUMENTS("addTable()", 3);
@@ -240,7 +240,7 @@ var ScriptingApi::Content::Wrapper::addImage (const var::NativeFunctionArgs& arg
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addImage(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addImage(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addImage()", 3);
@@ -258,7 +258,7 @@ var ScriptingApi::Content::Wrapper::addViewport(const var::NativeFunctionArgs& a
 	{
 		if (args.numArguments == 1)
 		{
-			return thisObject->addViewport(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addViewport(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addViewport()", 3);
@@ -277,7 +277,7 @@ var ScriptingApi::Content::Wrapper::addPanel (const var::NativeFunctionArgs& arg
 	{
 		if(args.numArguments == 1)
 		{
-			return thisObject->addPanel(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addPanel(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addPanel()", 3);
@@ -295,7 +295,7 @@ var ScriptingApi::Content::Wrapper::addAudioWaveform(const var::NativeFunctionAr
 	{
 		if (args.numArguments == 1)
 		{
-			return thisObject->addAudioWaveform(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addAudioWaveform(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addAudioWaveform()", 3);
@@ -312,7 +312,7 @@ var ScriptingApi::Content::Wrapper::addSliderPack(const var::NativeFunctionArgs&
 	{
 		if (args.numArguments == 1)
 		{
-			return thisObject->addSliderPack(Identifier(args.arguments[0]), 0, 0);
+			return thisObject->addSliderPack(Identifier(args.arguments[0]), -1, -1);
 		}
 
 		CHECK_ARGUMENTS("addSliderPack()", 3);
@@ -327,6 +327,11 @@ juce::var ScriptingApi::Content::Wrapper::addWebView(const var::NativeFunctionAr
 {
 	if (ScriptingApi::Content* thisObject = GET_OBJECT(Content))
 	{
+		if (args.numArguments == 1)
+		{
+			return thisObject->addWebView(Identifier(args.arguments[0]), -1, -1);
+		}
+
 		CHECK_ARGUMENTS("addWebView()", 3);
 		return thisObject->addWebView(Identifier(args.arguments[0]), args.arguments[1], args.arguments[2]);
 	}
@@ -338,6 +343,11 @@ var ScriptingApi::Content::Wrapper::addFloatingTile(const var::NativeFunctionArg
 {
 	if (ScriptingApi::Content* thisObject = GET_OBJECT(Content))
 	{
+		if (args.numArguments == 1)
+		{
+			return thisObject->addFloatingTile(Identifier(args.arguments[0]), -1, -1);
+		}
+
 		CHECK_ARGUMENTS("addFloatingTile()", 3);
 		return thisObject->addFloatingTile(Identifier(args.arguments[0]), args.arguments[1], args.arguments[2]);
 	}
@@ -349,6 +359,11 @@ var ScriptingApi::Content::Wrapper::addMultipageDialog(const var::NativeFunction
 {
 	if (ScriptingApi::Content* thisObject = GET_OBJECT(Content))
 	{
+		if (args.numArguments == 1)
+		{
+			return thisObject->addMultipageDialog(Identifier(args.arguments[0]), -1, -1);
+		}
+		
 		CHECK_ARGUMENTS("addMultipageDialog()", 3);
 		return thisObject->addMultipageDialog(Identifier(args.arguments[0]), args.arguments[1], args.arguments[2]);
 	}
@@ -360,6 +375,11 @@ var ScriptingApi::Content::Wrapper::addDynamicContainer(const var::NativeFunctio
 {
 	if (ScriptingApi::Content* thisObject = GET_OBJECT(Content))
 	{
+		if (args.numArguments == 1)
+		{
+			return thisObject->addDynamicContainer(Identifier(args.arguments[0]), -1, -1);
+		}
+
 		CHECK_ARGUMENTS("addDynamicContainer()", 3);
 		return thisObject->addDynamicContainer(Identifier(args.arguments[0]), args.arguments[1], args.arguments[2]);
 	}

@@ -1419,6 +1419,9 @@ public:
 		/** Throws an error message if the value is a string. */
 		void assertNoString(var value);
 
+		/** Throws the given error message if the condition isn't met. */
+		void assertWithMessage(bool condition, String errorMessage);
+
 		/** Throws an error message if the value is not a legal number (eg. string or array or infinity or NaN). */
 		void assertLegalNumber(var value);
 
@@ -1427,6 +1430,9 @@ public:
 
 		/** Starts a sampling session with the given ID. */
 		void startSampling(const String& sessionId);
+
+		/** Synchronously tests a callback of a given object for automated testing cycles. */
+		void testCallback(var obj, String callbackId, var argList);
 
 		/** Stores the current state of the given data into the current sampling session. */
 		void sample(const String& label, var dataToSample);
