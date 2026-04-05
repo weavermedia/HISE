@@ -97,15 +97,6 @@ SineSynth::SineSynth(MainController *mc, const String &id, int numVoices) :
 	waveformUpdateCounter = 0;
 	lastSaturationModValue = saturationAmount;
 
-	parameterNames.add("OctaveTranspose");
-	parameterNames.add("SemiTones");
-	parameterNames.add("UseFreqRatio");
-	parameterNames.add("CoarseFreqRatio");
-	parameterNames.add("FineFreqRatio");
-	parameterNames.add("SaturationAmount");
-
-	updateParameterSlots();
-
 	editorStateIdentifiers.add("SaturationModulationShown");
 
 	for (int i = 0; i < numVoices; i++) addVoice(new SineSynthVoice(this));
