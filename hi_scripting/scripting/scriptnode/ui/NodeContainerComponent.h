@@ -563,7 +563,7 @@ public:
 			if(auto mt = dynamic_cast<ContainerComponent::MacroToolbar*>(leftTabComponent.get()))
 				mt->setFixedParameter(isFixedParameterComponent());
 			
-			tree = std::move(PageInfo::createPageTree(parameterTree));
+            tree = PageInfo::createPageTree(parameterTree);
 
 			auto h = UIValues::ParameterHeight + UIValues::MacroDragHeight;
 
@@ -691,8 +691,13 @@ public:
 			}
 		}
 
+		bool skipRebuild = false;
+
 		void rebuildParameters()
 		{
+			if (skipRebuild)
+				return;
+
 			sliders.clear();
 			groups.clear();
 

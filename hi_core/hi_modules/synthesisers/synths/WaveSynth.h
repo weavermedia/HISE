@@ -193,7 +193,7 @@ class WaveSynth: public ModulatorSynth,
 {
 public:
 
-	SET_PROCESSOR_NAME("WaveSynth", "Waveform Generator", "A waveform generator based on BLIP synthesis of common synthesiser waveforms.");
+	SET_PROCESSOR_NAME("WaveSynth", "Waveform Generator", "");
 
 	enum EditorStates
 	{
@@ -248,6 +248,8 @@ public:
 
 	WaveSynth(MainController *mc, const String &id, int numVoices);;
 
+	const bool metadataInitialised;
+
 	void restoreFromValueTree(const ValueTree &v) override;;
 
 	ValueTree exportAsValueTree() const override;
@@ -261,7 +263,7 @@ public:
 	const Processor *getChildProcessor(int processorIndex) const override;
 
 
-	float getDefaultValue(int parameterIndex) const override;;
+	static ProcessorMetadata createMetadata();
 
 	void getWaveformTableValues(int displayIndex, float const** tableValues, int& numValues, float& normalizeValue) override;
 
@@ -359,6 +361,7 @@ private:
 
 	WaveformComponent::WaveformType waveForm1, waveForm2;
 
+	JUCE_DECLARE_WEAK_REFERENCEABLE(WaveSynth);
 };
 
 } // namespace hise

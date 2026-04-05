@@ -367,7 +367,7 @@ public:
 	void setModulationData(ModulationPopupData::Ptr modData);
 
 
-	void onAttributeChange(dispatch::library::Processor* p, uint8 index);
+	void onAttributeChange(dispatch::library::Processor* p, uint16 index);
 
 	juce::AudioProcessorParameter* getConnectedPluginParameter() const;
 
@@ -376,6 +376,10 @@ public:
 	bool skipHostDisplayUpdate = false;
 
 	void checkMouseClickProfiler(bool isDown);
+
+	Processor* getProcessor();;
+
+	const Processor* getProcessor() const;;
 
 protected:
 
@@ -396,9 +400,7 @@ protected:
 	*/
 	bool checkLearnMode();
 	
-	Processor *getProcessor();;
-
-	const Processor *getProcessor() const;;
+	
 
 	int parameter;
 
@@ -754,6 +756,20 @@ public:
 		NormalizedPercentage, ///< 0.0 - 1.0, Displayed as percentage
 		numModes
 	};
+
+	static StringArray getModeList()
+	{
+		return {
+			"Frequency", 
+			"Decibel", 
+			"Time", 
+			"TempoSync", 
+			"Linear", 
+			"Discrete", 
+			"Pan", 
+			"NormalizedPercentage"
+		};
+	}
 
 	struct HoverPopupLookandFeel
 	{

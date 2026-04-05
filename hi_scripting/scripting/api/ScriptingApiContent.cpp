@@ -48,8 +48,6 @@
 #define ADD_AS_SLIDER_TYPE(min, max, interval)
 #endif
 
-
-
 #include <cmath>
 
 namespace hise { using namespace juce;
@@ -228,7 +226,6 @@ struct ScriptingApi::Content::ScriptComponent::Wrapper
 	API_VOID_METHOD_WRAPPER_1(ScriptComponent, setValueNormalized);
 	API_VOID_METHOD_WRAPPER_1(ScriptComponent, setValueWithUndo);
 	API_METHOD_WRAPPER_0(ScriptComponent, getValueNormalized);
-	API_VOID_METHOD_WRAPPER_2(ScriptComponent, setColour);
 	API_VOID_METHOD_WRAPPER_4(ScriptComponent, setPosition);
 	API_VOID_METHOD_WRAPPER_1(ScriptComponent, setTooltip);
 	API_VOID_METHOD_WRAPPER_1(ScriptComponent, showControl);
@@ -342,6 +339,45 @@ struct ScriptingApi::Content::ScriptComponent::GlobalCableConnection : public sc
 };
 
 
+struct ScriptingApi::Content::ScriptComponent::Validators
+{
+#if USE_BACKEND
+	using DiagnosticResult = ApiClass::DiagnosticResult;
+
+	static DiagnosticResult checkProperty(ApiClass* c, const Identifier&, const Array<var>& args)
+	{
+		if (auto sc = dynamic_cast<ScriptComponent*>(c))
+		{
+			// if the parameter call is not resolvable at parse time
+			// (eg. not an literal), then this is undefined
+			if (!args[0].isUndefined())
+			{
+				auto propertyId = args[0].toString();
+
+				StringArray sa;
+
+				for (const auto& p : sc->propertyIds)
+					sa.add(p.toString());
+
+				if (!sa.contains(propertyId))
+					return DiagnosticResult::fail("unknown property").withWrongToken(propertyId).withFuzzySuggestion(sa);
+
+				if (sc->deactivatedProperties.contains(Identifier(propertyId)))
+					return DiagnosticResult::fail("deactivated property").withWrongToken(propertyId);
+
+				return DiagnosticResult::ok();
+			};
+
+			// couldn't defer the property string, 
+			return DiagnosticResult::unknown();
+		}
+
+		return DiagnosticResult::fail("not a ScriptComponent");
+	};
+#endif
+};
+
+
 ScriptingApi::Content::ScriptComponent::ScriptComponent(ProcessorWithScriptingContent* base, Identifier name_, int numConstants /*= 0*/) :
 	ConstScriptingObject(base, numConstants),
 	UpdateDispatcher::Listener(base->getScriptingContent()->getUpdateDispatcher()),
@@ -428,7 +464,6 @@ ScriptingApi::Content::ScriptComponent::ScriptComponent(ProcessorWithScriptingCo
 	ADD_API_METHOD_1(setValueNormalized);
 	ADD_API_METHOD_1(setValueWithUndo);
 	ADD_API_METHOD_0(getValueNormalized);
-	ADD_API_METHOD_2(setColour);
 	ADD_API_METHOD_4(setPosition);
 	ADD_API_METHOD_1(setTooltip);
 	ADD_API_METHOD_1(showControl);
@@ -440,10 +475,12 @@ ScriptingApi::Content::ScriptComponent::ScriptComponent(ProcessorWithScriptingCo
 	ADD_API_METHOD_0(changed);
 	ADD_API_METHOD_0(getGlobalPositionX);
 	ADD_API_METHOD_0(getGlobalPositionY);
-	ADD_API_METHOD_1(setControlCallback);
+	ADD_TYPED_API_METHOD_1(setControlCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC_RAW(setControlCallback, WeakCallbackHolder::checkCallbackNumArgs<2>);
 	ADD_API_METHOD_0(getAllProperties);
 	ADD_API_METHOD_1(setZLevel);
-	ADD_API_METHOD_1(setKeyPressCallback);
+	ADD_TYPED_API_METHOD_1(setKeyPressCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(keyboardCallback, setKeyPressCallback, 0);
 	ADD_API_METHOD_1(setConsumedKeyPresses);
 	ADD_API_METHOD_0(loseFocus);
     ADD_API_METHOD_0(grabFocus);
@@ -465,6 +502,10 @@ ScriptingApi::Content::ScriptComponent::ScriptComponent(ProcessorWithScriptingCo
 	pOnProperty =     cp.add(getId() + ".propertyChange()");
 
 	useRectangleClass = HISE_GET_PREPROCESSOR(getScriptProcessor()->getMainController_(), HISE_USE_SCRIPT_RECTANGLE_OBJECT);
+
+	// same lambda, same logic...
+	ADD_CALLBACK_DIAGNOSTIC_RAW(set, Validators::checkProperty);
+	ADD_CALLBACK_DIAGNOSTIC_RAW(get, Validators::checkProperty);
 
 	//setName(name_.toString());
 
@@ -1065,7 +1106,9 @@ void ScriptingApi::Content::ScriptComponent::changed()
 		return;
 	}
 
-	ScopedValueSetter<bool> svs(getScriptProcessor()->getMainController_()->getDeferNotifyHostFlag(), true);
+	auto mc = getScriptProcessor()->getMainController_();
+
+	ScopedValueSetter<bool> svs(mc->getDeferNotifyHostFlag(), true);
 	
 	controlSender.sendControlCallbackMessage();
 	sendValueListenerMessage();
@@ -1075,7 +1118,9 @@ void ScriptingApi::Content::ScriptComponent::changed()
 		// We need to throw an error again to stop the execution of the script
 		// (a recursive function call to this method will not be terminated because
 		// (the error is already consumed by the control callback handling).
-		if (!jp->getLastErrorMessage().wasOk())
+		// Note: In flaky threading mode, we don't throw an error as this exception might
+		// not be handled by the callstack...
+		if (!jp->getLastErrorMessage().wasOk() && !mc->isFlakyThreadingAllowed())
 			reportScriptError("Aborting script execution after error occured during changed() callback");
 	}
 }
@@ -1183,18 +1228,6 @@ void ScriptingApi::Content::ScriptComponent::setValue(var controlValue)
 	triggerAsyncUpdate();
 	sendValueListenerMessage();
 };
-
-void ScriptingApi::Content::ScriptComponent::setColour(int colourId, int colourAs32bitHex)
-{
-	switch (colourId)
-	{
-	case 0: propertyTree.setProperty(getIdFor(bgColour), (int64)colourAs32bitHex, nullptr); break;
-	case 1:	propertyTree.setProperty(getIdFor(itemColour), (int64)colourAs32bitHex, nullptr); break;
-	case 2:	propertyTree.setProperty(getIdFor(itemColour2), (int64)colourAs32bitHex, nullptr); break;
-	case 3:	propertyTree.setProperty(getIdFor(textColour), (int64)colourAs32bitHex, nullptr); break;
-	}
-}
-
 
 void ScriptingApi::Content::ScriptComponent::setPropertiesFromJSON(const var &jsonData)
 {
@@ -1868,6 +1901,11 @@ void ScriptingApi::Content::ScriptComponent::setLocalLookAndFeel(var lafObject)
 {
 	if (auto l = dynamic_cast<ScriptingObjects::ScriptedLookAndFeel*>(lafObject.getObject()))
 	{
+		if (auto registry = getScriptProcessor()->getScriptingContent()->lafRegistry.get())
+		{
+			registry->registerRecipient(l, this);
+		}
+
 		if(l->currentStyleSheet.isNotEmpty())
 			setStyleSheetClass({});
 
@@ -2065,7 +2103,7 @@ maximum(1.0f)
 	setDefaultValue(ScriptComponent::Properties::height, 48);
 	setDefaultValue(ScriptSlider::Properties::Mode, "Linear");
 	setDefaultValue(ScriptSlider::Properties::Style, "Knob");
-	setDefaultValue(ScriptSlider::Properties::middlePosition, -1.0);
+	setDefaultValue(ScriptSlider::Properties::middlePosition, "disabled");
 	setDefaultValue(ScriptSlider::Properties::stepSize, 0.01);
 	setDefaultValue(ScriptComponent::min, 0.0);
 	setDefaultValue(ScriptComponent::max, 1.0);
@@ -2078,7 +2116,7 @@ maximum(1.0f)
 	setDefaultValue(ScriptSlider::Properties::mouseSensitivity, 1.0f);
 	setDefaultValue(ScriptSlider::Properties::dragDirection, "Diagonal");
 	setDefaultValue(ScriptSlider::Properties::showValuePopup, "No");
-	setDefaultValue(ScriptSlider::Properties::showTextBox, true);
+	setDefaultValue(ScriptSlider::Properties::showTextBox, false);
 	setDefaultValue(ScriptSlider::Properties::scrollWheel, true);
 	setDefaultValue(ScriptSlider::Properties::enableMidiLearn, true);
 	setDefaultValue(ScriptSlider::Properties::sendValueOnDrag, true);
@@ -2100,7 +2138,9 @@ maximum(1.0f)
 	initInternalPropertyFromValueTreeOrDefault(ScriptComponent::linkedTo);
 
 	ADD_TYPED_API_METHOD_1(setValuePopupFunction, VarTypeChecker::Function);
-	ADD_TYPED_API_METHOD_1(setMidPoint, VarTypeChecker::Number);
+	ADD_CALLBACK_DIAGNOSTIC_RAW(setValuePopupFunction, WeakCallbackHolder::checkCallbackNumArgs<1>);
+	// hack: (String | Number) == Colour => allow "disabled" sentinel
+	ADD_TYPED_API_METHOD_1(setMidPoint, VarTypeChecker::Colour); 
 	ADD_API_METHOD_3(setRange);
 	ADD_TYPED_API_METHOD_1(setMode, VarTypeChecker::String);
 	ADD_TYPED_API_METHOD_1(setStyle, VarTypeChecker::String);
@@ -2317,27 +2357,26 @@ void ScriptingApi::Content::ScriptSlider::setValuePopupFunction(var newFunction)
 	getPropertyValueTree().sendPropertyChangeMessage(getIdFor(parameterId));
 }
 
-void ScriptingApi::Content::ScriptSlider::setMidPoint(double valueForMidPoint)
+void ScriptingApi::Content::ScriptSlider::setMidPoint(var valueForMidPoint)
 {
-	if (valueForMidPoint == -1.0f)
-	{
-		setScriptObjectProperty(middlePosition, valueForMidPoint);
-		return;
-		//valueForMidPoint = range.getStart() + (range.getEnd() - range.getStart()) / 2.0;
-	}
-
 	Range<double> range = Range<double>(getScriptObjectProperty(ScriptComponent::Properties::min), getScriptObjectProperty(ScriptComponent::Properties::max));
 
-	const bool illegalMidPoint = valueForMidPoint == range.getStart() || !range.contains(valueForMidPoint);
-	if (illegalMidPoint)
+	double mv;
+
+	if (ApiHelpers::shouldApplyMidPoint(range.getStart(), range.getEnd(), valueForMidPoint))
 	{
-		debugError(parent->getProcessor(), "setMidPoint() value must be in the knob range.");
-		valueForMidPoint = (range.getEnd() - range.getStart()) / 2.0 + range.getStart();
+		CHECK_COPY_AND_RETURN_11(getProcessor());
+		setScriptObjectProperty(middlePosition, valueForMidPoint);
 	}
+	else
+	{
+		auto rv = RangeHelpers::parseMidPointValue(valueForMidPoint);
 
-	CHECK_COPY_AND_RETURN_11(getProcessor());
-
-	setScriptObjectProperty(middlePosition, valueForMidPoint);
+		if (rv.first || valueForMidPoint.toString() == "disabled")
+			setScriptObjectProperty(middlePosition, valueForMidPoint);
+		else
+			reportScriptError("mid point string must be " + String("disabled").quoted());
+	}
 }
 
 void ScriptingApi::Content::ScriptSlider::setStyle(String style)
@@ -2497,31 +2536,26 @@ void ScriptingApi::Content::ScriptSlider::setValueNormalized(double normalizedVa
 {
 	const double minValue = getScriptObjectProperty(min);
 	const double maxValue = getScriptObjectProperty(max);
-	const double midPoint = getScriptObjectProperty(middlePosition);
+	
 	const double step = getScriptObjectProperty(stepSize);
 
-	if (minValue < maxValue &&
-		midPoint > minValue &&
-		midPoint < maxValue &&
-		step >= 0.0)
+	if (minValue < maxValue && step >= 0.0)
 	{
-		const double skew = log(0.5) / log((midPoint - minValue) / (maxValue - minValue));
+		NormalisableRange<double> range(minValue, maxValue, step);
+		
+		const var midPoint = getScriptObjectProperty(middlePosition);
 
-		NormalisableRange<double> range = NormalisableRange<double>(minValue, maxValue, step, skew);
-
+		if (ApiHelpers::shouldApplyMidPoint(minValue, maxValue, midPoint))
+			range.setSkewForCentre((double)midPoint);
+		
 		const double actualValue = range.convertFrom0to1(normalizedValue);
-
 		setValue(actualValue);
 	}
 	else
 	{
-
-
 #if USE_BACKEND
 		String errorMessage;
-
-		errorMessage << "Slider range of " << getName().toString() << " is illegal: min: " << minValue << ", max: " << maxValue << ", middlePoint: " << midPoint << ", step: " << step;
-
+		errorMessage << "Slider range of " << getName().toString() << " is illegal: min: " << minValue << ", max: " << maxValue << ", step: " << step;
 		logErrorAndContinue(errorMessage);
 #endif
 	}
@@ -2531,26 +2565,17 @@ double ScriptingApi::Content::ScriptSlider::getValueNormalized() const
 {
 	const double minValue = getScriptObjectProperty(min);
 	const double maxValue = getScriptObjectProperty(max);
-	double midPoint = getScriptObjectProperty(middlePosition);
+	const var midPoint = getScriptObjectProperty(middlePosition);
 	const double step = getScriptObjectProperty(stepSize);
 
-	Range<double> r(minValue, maxValue);
-
-	if (!r.contains(midPoint))
-		midPoint = r.getStart() + 0.5 * r.getLength();
-		
-
-	if (minValue < maxValue &&
-		midPoint > minValue &&
-		midPoint < maxValue &&
-		step >= 0.0)
+	if (minValue < maxValue && step >= 0.0)
 	{
-		const double skew = log(0.5) / log((midPoint - minValue) / (maxValue - minValue));
+		NormalisableRange<double> range = NormalisableRange<double>(minValue, maxValue, step);
 
-		NormalisableRange<double> range = NormalisableRange<double>(minValue, maxValue, step, skew);
+		if (ApiHelpers::shouldApplyMidPoint(minValue, maxValue, midPoint))
+			range.setSkewForCentre((double)midPoint);
 
 		const double unNormalizedValue = getValue();
-
 		return range.convertTo0to1(unNormalizedValue);
 	}
 	else
@@ -2559,9 +2584,7 @@ double ScriptingApi::Content::ScriptSlider::getValueNormalized() const
 
 #if USE_BACKEND
 		String errorMessage;
-
-		errorMessage << "Slider range of " << getName().toString() << " is illegal: min: " << minValue << ", max: " << maxValue << ", middlePoint: " << midPoint << ", step: " << step;
-
+		errorMessage << "Slider range of " << getName().toString() << " is illegal: min: " << minValue << ", max: " << maxValue << ", step: " << step;
 		logErrorAndContinue(errorMessage);
 #endif
 
@@ -2593,22 +2616,18 @@ void ScriptingApi::Content::ScriptSlider::setMode(String mode)
 
 	auto currentModeName = getScriptObjectProperty(ScriptSlider::Mode).toString();
 	auto currentMode = sa.indexOf(currentModeName);
-	
 	auto currentModeDefaultRange = HiSlider::getRangeForMode((HiSlider::Mode)currentMode);
-
 	
 	const bool sameStart = currentModeDefaultRange.start == (double)getScriptObjectProperty(ScriptComponent::Properties::min);
 	const bool sameEnd = currentModeDefaultRange.end == (double)getScriptObjectProperty(ScriptComponent::Properties::max);
 	
 	const bool sameStep = currentModeDefaultRange.interval == (double)getScriptObjectProperty(ScriptSlider::Properties::stepSize);
-	
-	
 
 	auto cp = currentModeDefaultRange;
-	auto mp = (double)getScriptObjectProperty(ScriptSlider::Properties::middlePosition);
+	const auto mp = getScriptObjectProperty(ScriptSlider::Properties::middlePosition);
 
-	if(cp.getRange().contains(mp) && mp > cp.start)
-		cp.setSkewForCentre(mp);
+	if(ApiHelpers::shouldApplyMidPoint(cp.start, cp.end, mp))
+		cp.setSkewForCentre((double)mp);
 
 	const bool sameSkew = cp.skew == 1.0;
 
@@ -4438,7 +4457,6 @@ ScriptingApi::Content::ScriptPanel::ScriptPanel(ScriptPanel* parent) :
 	fileDropRoutine	(parent->getScriptProcessor(), nullptr, var(), 1),
 	mouseCursorPath(MouseCursor::NormalCursor)
 {
-	
 	init();
 }
 
@@ -4491,14 +4509,20 @@ void ScriptingApi::Content::ScriptPanel::init()
 
 	//initInternalPropertyFromValueTreeOrDefault(visible);
 
+	
+
 	ADD_API_METHOD_0(repaint);
 	ADD_API_METHOD_0(repaintImmediately);
 	ADD_API_METHOD_1(setPaintRoutine);
 	ADD_API_METHOD_3(setImage);
-	ADD_API_METHOD_1(setMouseCallback);
-	ADD_API_METHOD_1(setLoadingCallback);
-	ADD_API_METHOD_1(setTimerCallback);
-	ADD_API_METHOD_3(setFileDropCallback);
+	ADD_TYPED_API_METHOD_1(setMouseCallback, VarTypeChecker::Function);		
+	ADD_CALLBACK_DIAGNOSTIC(mouseRoutine, setMouseCallback, 0);
+	ADD_TYPED_API_METHOD_1(setLoadingCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(loadRoutine, setLoadingCallback, 0);
+	ADD_TYPED_API_METHOD_1(setTimerCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(timerRoutine, setTimerCallback, 0);
+	ADD_TYPED_API_METHOD_3(setFileDropCallback, VarTypeChecker::String, VarTypeChecker::String, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(fileDropRoutine, setFileDropCallback, 2);
 	ADD_API_METHOD_1(startTimer);
 	ADD_API_METHOD_0(stopTimer);
 	ADD_API_METHOD_2(loadImage);
@@ -5473,6 +5497,28 @@ bool ScriptingApi::Content::ScriptPanel::startInternalDrag(var dragData)
 	return true;
 }
 
+hise::ProcessorMetadata::ParameterMetadata ScriptingApi::Content::ScriptPanel::createParameterMetadata(int indexInContent) const
+{
+	auto pd = ScriptComponent::createParameterMetadata(indexInContent);
+
+	auto clickable = getScriptObjectProperty(allowCallbacks).toString() != "No Callbacks";
+
+	if (!clickable)
+		return pd.asDisabled();
+
+	auto items = getItemList();
+
+	if (!items.isEmpty() && getScriptObjectProperty(saveInPreset))
+		return pd.withValueList(items);
+
+	auto rng = scriptnode::RangeHelpers::getDoubleRange(getPropertyValueTree(), scriptnode::RangeHelpers::IdSet::ScriptComponents);
+
+	if ((int)rng.getRange().getLength() == 1 && (int)rng.rng.interval == 1)
+		return pd.asToggle();
+
+	return pd.withRange(rng);
+}
+
 ScriptCreatedComponentWrapper * ScriptingApi::Content::ScriptedViewport::createComponentWrapper(ScriptContentComponent *content, int index)
 {
 	return new ScriptCreatedComponentWrappers::ViewportWrapper(content, this, index);
@@ -5528,9 +5574,11 @@ ScriptingApi::Content::ScriptedViewport::ScriptedViewport(ProcessorWithScripting
 	ADD_API_METHOD_1(setTableMode);
 	ADD_API_METHOD_1(setTableColumns);
 	ADD_API_METHOD_1(setTableRowData);
-	ADD_API_METHOD_1(setTableCallback);
+	ADD_TYPED_API_METHOD_1(setTableCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC_RAW(setTableCallback, WeakCallbackHolder::checkCallbackNumArgs<1>);
 	ADD_API_METHOD_1(getOriginalRowIndex);
-	ADD_API_METHOD_1(setTableSortFunction);
+	ADD_TYPED_API_METHOD_1(setTableSortFunction, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC_RAW(setTableSortFunction, WeakCallbackHolder::checkCallbackNumArgs<2>);
 	ADD_API_METHOD_1(setEventTypesForValueCallback);
 }
 
@@ -6179,13 +6227,15 @@ ScriptingApi::Content::ScriptDynamicContainer::ChildReference::ChildReference(Sc
 	ADD_API_METHOD_1(setValueWithUndo);
 	ADD_API_METHOD_0(changed);
 	ADD_API_METHOD_0(getValue);
-	ADD_API_METHOD_1(setControlCallback);
+	ADD_TYPED_API_METHOD_1(setControlCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(valueCallback, setControlCallback, 0);
 	ADD_API_METHOD_1(sendRepaintMessage); 
 	ADD_API_METHOD_1(updateValueFromProcessorConnection); 
 	ADD_API_METHOD_1(loseFocus); 
 	ADD_API_METHOD_1(resetValueToDefault);
 	ADD_API_METHOD_1(setPaintRoutine);
-	ADD_API_METHOD_1(setChildCallback);
+	ADD_TYPED_API_METHOD_1(setChildCallback, VarTypeChecker::Function);
+	ADD_CALLBACK_DIAGNOSTIC(childCallback, setChildCallback, 0);
 	ADD_API_METHOD_1(isEqual);
 	ADD_API_METHOD_0(getNumChildComponents);
 	ADD_API_METHOD_1(getChildComponentIndex);
@@ -7235,6 +7285,17 @@ String ScriptingApi::Content::ScriptMultipageDialog::bindCallback(String id, var
 {
 	auto n = ApiHelpers::getDispatchType(notificationType, false);
 
+#if USE_BACKEND
+	if (n == dispatch::DispatchType::sendNotificationSync)
+	{
+		if (auto co = dynamic_cast<WeakCallbackHolder::CallableObject*>(callback.getObject()))
+		{
+			if (HiseJavascriptEngine::RootObject::RealtimeSafetyInfo::check(co, this, "ScriptMultipageDialog.bindCallback"))
+				reportScriptError("Callback is not safe for synchronous audio-thread execution");
+		}
+	}
+#endif
+
 	auto nc = new ValueCallback(this, id, callback, n);
 	valueCallbacks.add(nc);
 	
@@ -7739,6 +7800,7 @@ colour(Colour(0xff777777))
 	setMethod("setWidth", Wrapper::setWidth);
 	setMethod("createScreenshot", Wrapper::createScreenshot);
 	setMethod("addVisualGuide", Wrapper::addVisualGuide);
+	setMethod("setUpdateExistingPosition", Wrapper::setUpdateExistingPosition);
 	setMethod("getInterfaceSize", Wrapper::getInterfaceSize);
     setMethod("makeFrontInterface", Wrapper::makeFrontInterface);
 	setMethod("makeFullScreenInterface", Wrapper::makeFullScreenInterface);
@@ -7753,7 +7815,6 @@ colour(Colour(0xff777777))
 	setMethod("storeAllControlsAsPreset", Wrapper::storeAllControlsAsPreset);
 	setMethod("restoreAllControlsFromPreset", Wrapper::restoreAllControlsFromPreset);
 	setMethod("setUseHighResolutionForPanels", Wrapper::setUseHighResolutionForPanels);
-	setMethod("setColour", Wrapper::setColour);
 	setMethod("clear", Wrapper::clear);
 	setMethod("isCtrlDown", Wrapper::isCtrlDown);
 	setMethod("createPath", Wrapper::createPath);
@@ -8455,16 +8516,34 @@ bool ScriptingApi::Content::isEmpty()
 	return components.size() == 0;
 }
 
-var ScriptingApi::Content::createPath()
+var ScriptingApi::Content::createPath(var data)
 {
 	ScriptingObjects::PathObject* obj = new ScriptingObjects::PathObject(getScriptProcessor());
+
+	if (data.isString() || data.isArray())
+		obj->loadFromData(data);
 
 	return var(obj);
 }
 
 juce::var ScriptingApi::Content::createLocalLookAndFeel()
 {
-	return var(new ScriptingObjects::ScriptedLookAndFeel(getScriptProcessor(), false));
+	auto laf = new ScriptingObjects::ScriptedLookAndFeel(getScriptProcessor(), false);
+
+	if (auto registry = getScriptProcessor()->getScriptingContent()->getLafRegistry())
+	{
+		if (auto jp = dynamic_cast<JavascriptProcessor*>(getScriptProcessor()))
+		{
+			jp->getScriptEngine()->debugInfoListeners.push_back({ laf, [registry](DebugInformationBase::Ptr debugInfo)
+			{
+				auto id = debugInfo->getTextForName();
+				auto loc = debugInfo->getLocation();
+				registry->registerLaf(debugInfo->getObject(), id, loc);
+			}});
+		}
+	}
+
+	return var(laf);
 }
 
 void ScriptingApi::Content::cleanJavascriptObjects()
@@ -9154,6 +9233,158 @@ void ScriptingApi::Content::setKeyPressCallback(const var& keyPress, var keyPres
 #undef ADD_TO_TYPE_SELECTOR
 #undef ADD_AS_SLIDER_TYPE
 #undef SEND_MESSAGE
+
+
+
+bool hise::ScriptingApi::Content::LafRegistry::hasRecipients() const
+{
+	return !list.isEmpty() || !pendingRegisterComponents.empty();
+}
+
+// Returns true if any recipients use Script or Mixed style (need render wait)
+bool hise::ScriptingApi::Content::LafRegistry::hasScriptBasedRecipients() const
+{
+	for (auto l : list)
+	{
+		if (l->isUsingScriptFunctions())
+			return true;
+	}
+
+	return false;
+}
+
+// Returns true when all visible script-based recipients have rendered at least once
+bool hise::ScriptingApi::Content::LafRegistry::allRecipientsRendered() const
+{
+	for (auto l : list)
+	{
+		if (l->isUsingScriptFunctions())
+		{
+			for (const auto& r : l->assignedComponents)
+			{
+				// Skip invisible components - they won't render
+				if (!r.isShowing)
+					continue;
+					
+				if (r.rendered.get() == 0)
+					return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+// Returns info about script-based components that haven't rendered yet
+Array<ScriptingApi::Content::LafRegistry::UnrenderedInfo> hise::ScriptingApi::Content::LafRegistry::getUnrenderedComponents() const
+{
+	Array<UnrenderedInfo> result;
+
+	for (auto l : list)
+	{
+		if (l->isUsingScriptFunctions())
+		{
+			for (const auto& r : l->assignedComponents)
+			{
+				if (r.rendered.get() == 0)
+					result.add({ r.name, !r.isShowing });
+			}
+		}
+	}
+
+	return result;
+}
+
+// Returns LAF info for a component (any style), or nullopt if no LAF
+hise::ScriptingApi::Content::LafRegistry::LafInfo::Ptr hise::ScriptingApi::Content::LafRegistry::getLafInfoForComponent(const Identifier& componentId) const
+{
+	for (auto l : list)
+	{
+		for (const auto& a : l->assignedComponents)
+		{
+			if (a.name == componentId)
+				return l;
+		}
+	}
+
+	return nullptr;
+}
+
+void hise::ScriptingApi::Content::LafRegistry::registerLaf(DebugableObjectBase* laf, const String& variableName, const DebugableObjectBase::Location& location)
+{
+	if (auto typed = dynamic_cast<ScriptingObjects::ScriptedLookAndFeel*>(laf))
+	{
+		auto newInfo = new LafInfo();
+
+		newInfo->variableName = variableName;
+		newInfo->location = location;
+
+		auto useCSS = typed->isUsingCSS();
+		auto useScript = typed->isUsingScriptFunctions();
+		auto useInline = typed->isUsingInlineStyleSheet();
+
+		newInfo->cssLocation = typed->getExternalCssPath();
+
+		using RS = LafInfo::RenderStyle;
+
+		if (!useCSS)
+		{
+			newInfo->renderStyle = useScript ? RS::Script : RS::Unassigned;
+		}
+		else
+		{
+			if (useScript)
+				newInfo->renderStyle = RS::Mixed;
+			else
+				newInfo->renderStyle = useInline ? RS::CssInline : RS::Css;
+		}
+
+		// now add all pending components that match the laf.
+		for (auto& pc : pendingRegisterComponents)
+		{
+			if (pc.second.laf == laf)
+			{
+				LafInfo::RegisteredComponent rc;
+				rc.name = pc.first;
+				rc.rendered.set(0);
+				rc.isShowing = pc.second.component != nullptr && pc.second.component->isShowing();
+				newInfo->assignedComponents.add(rc);
+			}
+		}
+
+		list.add(newInfo);
+	}
+	else
+	{
+		jassertfalse;
+	}
+}
+
+
+void ScriptingApi::Content::LafRegistry::registerRecipient(DebugableObjectBase* laf, ScriptComponent* component)
+{
+	// only store this in the pending component list, as this is called before the registry is created.
+	// note that calling this subsequently with the same component ID is expected behaviour and overwrites the assigned
+	// laf. This can occur if multiple setLocalLookAndFeel calls are made and behaves as expected.
+	pendingRegisterComponents[component->getName()] = { component, laf };
+}
+
+bool ScriptingApi::Content::LafRegistry::markAsRendered(const Identifier& componentId)
+{
+	for (auto l : list)
+	{
+		for (auto& a : l->assignedComponents)
+		{
+			if (a.name == componentId)
+			{
+				a.rendered.set(1);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
 
 Identifier ScriptingApi::Content::Helpers::getUniqueIdentifier(Content* c, const String& id)
 {
@@ -9953,6 +10184,10 @@ void ScriptingApi::Content::setIsRebuilding(bool isCurrentlyRebuilding)
 	}
 }
 
+void ScriptingApi::Content::setUpdateExistingPosition(bool shouldUpdateExistingComponents)
+{
+	updateExistingPositions = shouldUpdateExistingComponents;
+}
 
 hise::ScriptComponentPropertyTypeSelector::SelectorTypes ScriptComponentPropertyTypeSelector::getTypeForId(const Identifier &id) const
 {

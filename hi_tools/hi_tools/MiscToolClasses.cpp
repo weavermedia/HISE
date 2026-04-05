@@ -35,7 +35,9 @@
 #include "xmmintrin.h"
 #endif
 
-
+#if !HISE_INCLUDE_XSIMD
+#include "../hi_neural/RTNeural/modules/xsimd/xsimd.hpp"
+#endif
 
 
 namespace hise {
@@ -466,10 +468,38 @@ StringArray FuzzySearcher::searchForResults(const String &word, const StringArra
 	return foundWords;
 }
 
-Array<int> FuzzySearcher::searchForIndexes(const String &word, const StringArray &wordList, double fuzzyness)
+Array<int> FuzzySearcher::searchForIndexes(const String &word, const StringArray &wordList, double fuzzyness, bool sortByScore)
 {
 	Array<int> foundIndexes;
 	search(&foundIndexes, true, word, wordList, fuzzyness);
+	
+	if (sortByScore && foundIndexes.size() > 1)
+	{
+		String searchWord = word.toLowerCase();
+		searchWord = searchWord.removeCharacters("()`[]*_-` ");
+		
+		// Precompute distances for each matched index
+		HashMap<int, int> distances;
+		for (int idx : foundIndexes)
+		{
+			String w = wordList[idx].toLowerCase();
+			w = w.removeCharacters("()`[]*_-` ").substring(0, 32);
+			distances.set(idx, getLevenshteinDistance(searchWord, w));
+		}
+		
+		struct DistanceSorter
+		{
+			const HashMap<int, int>& distances;
+			
+			int compareElements(int a, int b) const
+			{
+				return distances[a] - distances[b];
+			}
+		} sorter { distances };
+		
+		foundIndexes.sort(sorter);
+	}
+	
 	return foundIndexes;
 }
 
@@ -3446,6 +3476,21 @@ SemanticVersionChecker::SemanticVersionChecker(const std::array<int, 3>& oldVers
 	oldVersion.validVersion = true;
 }
 
+SemanticVersionChecker::SemanticVersionChecker(const std::array<int, 4>& oldVersion_, const std::array<int, 4>& newVersion_)
+{
+	newVersion.majorVersion = newVersion_[0];
+	newVersion.minorVersion = newVersion_[1];
+	newVersion.patchVersion = newVersion_[2];
+	newVersion.buildNumber = newVersion_[3];
+	newVersion.validVersion = true;
+
+	oldVersion.majorVersion = oldVersion_[0];
+	oldVersion.minorVersion = oldVersion_[1];
+	oldVersion.patchVersion = oldVersion_[2];
+	oldVersion.buildNumber = oldVersion_[3];
+	oldVersion.validVersion = true;
+}
+
 SemanticVersionChecker::SemanticVersionChecker(const String& oldVersion_, const String& newVersion_)
 {
 	parseVersion(oldVersion, oldVersion_);
@@ -3461,6 +3506,9 @@ bool SemanticVersionChecker::isMinorVersionUpdate() const
 bool SemanticVersionChecker::isPatchVersionUpdate() const
 { return newVersion.patchVersion > oldVersion.patchVersion; }
 
+bool SemanticVersionChecker::isBuildNumberUpdate() const
+{ return newVersion.buildNumber > oldVersion.buildNumber; }
+
 bool SemanticVersionChecker::oldVersionNumberIsValid() const
 { return oldVersion.validVersion; }
 
@@ -3472,7 +3520,7 @@ void SemanticVersionChecker::parseVersion(VersionInfo& info, const String& v)
 	const String sanitized = v.replace("v", "", true);
 	StringArray a = StringArray::fromTokens(sanitized, ".", "");
 
-	if (a.size() != 3)
+	if (a.size() != 3 && a.size() != 4)
 	{
 		info.validVersion = false;
 		return;
@@ -3482,6 +3530,10 @@ void SemanticVersionChecker::parseVersion(VersionInfo& info, const String& v)
 		info.majorVersion = a[0].getIntValue();
 		info.minorVersion = a[1].getIntValue();
 		info.patchVersion = a[2].getIntValue();
+
+		if (a.size() == 4)
+			info.buildNumber = a[3].getIntValue();
+
 		info.validVersion = true;
 	}
 }
@@ -3502,8 +3554,15 @@ bool SemanticVersionChecker::isUpdate() const
         {
             if (newVersion.patchVersion > oldVersion.patchVersion)
                 return true;
-            else
+            else if (newVersion.patchVersion < oldVersion.patchVersion)
                 return false;
+            else
+            {
+                if (newVersion.buildNumber > oldVersion.buildNumber)
+                    return true;
+                else
+                    return false;
+            }
         }
     }
 }

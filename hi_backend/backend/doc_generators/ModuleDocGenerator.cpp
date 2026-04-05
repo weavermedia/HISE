@@ -121,36 +121,12 @@ hise::MarkdownDataBase::Item::Ptr HiseModuleDatabase::ItemGenerator::createItemF
 
 hise::MarkdownDataBase::Item::Ptr HiseModuleDatabase::ItemGenerator::createItemForFactory(FactoryType* owned, const String& factoryName, MarkdownDataBase::Item* parent)
 {
+	
 	ScopedPointer<FactoryType> f = owned;
 
 	auto n = f->getNumProcessors();
 
 	auto list = MarkdownDataBase::Item::createNew();
-	list->url = parent->url.getChildUrl("list");
-	list->url.setType(MarkdownLink::Folder);
-	list->tocString = "List of " + factoryName;
-	list->keywords.add(factoryName);
-
-    MainController::ScopedBadBabysitter sb(f->getOwnerProcessor()->getMainController());
-
-    for (int i = 0; i < n; i++)
-	{
-        MessageManagerLock mm;
-		ScopedPointer<Processor> p = f->createProcessor(i, "funky");
-
-		if (p->getDescription() == "deprecated")
-			continue;
-
-		parent->c = p->getColour();
-        
-		list->addChild(createItemForProcessor(p, list.get()));
-        
-        
-	}
-    
-    list->isAlwaysOpen = true;
-	list->sortChildren();
-	
 	return list;
 }
 
@@ -246,162 +222,14 @@ hise::MarkdownDataBase::Item::Ptr HiseModuleDatabase::ItemGenerator::createRootI
 
 HiseModuleDatabase::Resolver::Resolver(File root_) :
 	LinkResolver(),
-	root(root_)
+	root(root_),
+	parameterDump(new DynamicObject())
 {
 	data->createAllProcessors();
 }
 
-
-struct DummyProcessorDoc : public ProcessorDocumentation
-{
-
-};
-
-
 juce::String HiseModuleDatabase::Resolver::getContent(const MarkdownLink& url)
 {
-	if (auto p = getProcessorForURL(url))
-	{
-		String s;
-
-		String fileContent;
-
-		NewLine nl;
-
-		auto f = url.getMarkdownFile(root);
-
-
-		if (!f.existsAsFile() && MessageManager::getInstance()->isThisTheMessageThread() &&
-            !CompileExporter::isExportingFromCommandLine())
-		{
-			if (PresetHandler::showYesNoWindow("Create file", "Do you want to create a file for this module"))
-			{
-				f = MarkdownHeader::createEmptyMarkdownFileWithMarkdownHeader(f.getParentDirectory(), p->getType().toString(), p->getDescription());
-			}
-		}
-
-		MarkdownHeader header = url.getHeaderFromFile(root);
-
-		s << url.toString(MarkdownLink::ContentHeader, root);
-
-		s << "Type ID: `" << p->getType() << "`  " << nl;
-
-		StringArray interfaces;
-
-		if (dynamic_cast<SlotFX*>(p) != nullptr)
-			interfaces.add("SlotFX");
-		if (dynamic_cast<MidiPlayer*>(p) != nullptr)
-			interfaces.add("MidiPlayer");
-		if (dynamic_cast<ModulatorSampler*>(p) != nullptr)
-			interfaces.add("Sampler");
-		if (dynamic_cast<AudioSampleProcessor*>(p) != nullptr)
-			interfaces.add("AudioSampleProcessor");
-		if (dynamic_cast<LookupTableProcessor*>(p) != nullptr)
-			interfaces.add("TableProcessor");
-		if (dynamic_cast<RoutableProcessor*>(p) != nullptr)
-			interfaces.add("RoutingMatrix");
-		if(dynamic_cast<snex::Types::VoiceResetter*>(p) != nullptr)
-			interfaces.add("VoiceResetter");
-		
-		if (interfaces.size() > 0)
-		{
-			s << "Interface classes: ";
-
-			MarkdownLink iLink(root, ScriptingApiDatabase::apiWildcard);
-
-			for (auto i : interfaces)
-			{
-				//s << iLink.getChildUrl(i).toString(MarkdownLink::FormattedLinkMarkdown);
-
-				if(i == "VoiceResetter")
-				{
-					s << "[`" << i << "`](/scriptnode/manual/glossary#voiceresetter)";
-				}
-				else
-				{
-					s << "[`" << i << "`](/scripting/scripting-api/" << MarkdownLink::Helpers::getSanitizedFilename(i) << ") ";
-				}
-
-				
-			}
-
-			s << " \n";
-		}
-
-		s << "> **" << header.getDescription() << "**  " << nl << nl;
-
-		auto id = getProcessorIdFromURL(url);
-
-		s << "![](/images/module_screenshot_" << id << ".png)  " << nl;
-
-		s << url.toString(MarkdownLink::ContentWithoutHeader) << nl;
-
-		ScopedPointer<ProcessorDocumentation> doc = p->createDocumentation();
-
-		if (doc == nullptr)
-			doc = new DummyProcessorDoc();
-
-		if (ProcessorHelpers::is<ModulatorSynth>(p))
-		{
-			doc->setOffset(ModulatorSynth::Parameters::numModulatorSynthParameters,
-				ModulatorSynth::numInternalChains);
-		}
-
-		doc->fillMissingParameters(p);
-
-		
-		auto pList = header.getKeyList("parameters");
-
-		for (auto& parameter : doc->parameters)
-		{
-			auto pId = parameter.id.toString();
-
-			for (const auto& possibleMatch : pList)
-			{
-				if (possibleMatch.startsWith(pId))
-					parameter.helpText = possibleMatch.fromFirstOccurrenceOf(":", false, false).trim();
-			}
-		}
-
-		auto cList = header.getKeyList("chains");
-
-		for (auto& c : doc->chains)
-		{
-			if (c.helpText == "-")
-			{
-				auto chainId = c.id.toString();
-
-				for (const auto& possibleMatch : cList)
-				{
-					if (possibleMatch.startsWith(chainId))
-						c.helpText = possibleMatch.fromFirstOccurrenceOf(":", false, false).trim();
-				}
-			}
-		}
-
-		String pdump;
-
-		pdump << "\n### " << p->getType().toString() + " Parameter API";
-
-		pdump << "\n\n```javascript\n";
-
-		for(int i = 0; i < doc->parameters.size(); i++)
-		{
-			auto id = p->getType().toString();
-			
-			pdump << "/* " << doc->parameters[i].helpText << ". */\n";
-			pdump << id << ".setAttribute(" << id << "." << doc->parameters[i].id << ", value);\n\n";
-		}
-
-		pdump << "```\n";
-
-		parameterDump << pdump;
-
-		s << doc->createHelpText();
-
-		return s;
-	}
-	
 	return {};
 }
 

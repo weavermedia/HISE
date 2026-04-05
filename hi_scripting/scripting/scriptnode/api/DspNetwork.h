@@ -210,6 +210,8 @@ public:
 		void saveNetworks(ValueTree& d) const;
 		void restoreNetworks(const ValueTree& d);
 
+		ProcessorMetadata withDynamicParametersFromNetwork(const ProcessorMetadata& pn, int numMods, int offset) const;
+
 		virtual bool isPolyphonic() const;;
 
 		void clearAllNetworks();
@@ -947,7 +949,7 @@ struct DspNetworkListeners
 						return false;
 				}
 
-				return !v[PropertyIds::Automated];
+				return !(v[PropertyIds::Automated] || v[PropertyIds::AutomatedExternal]);
 			}
 
 			return true;

@@ -111,16 +111,47 @@ public:
 
 	static Array<Identifier> getGlobalApiClasses();
 
+	/** Converts the sentinel string value "disabled" to DBL_MAX, otherwise writes the midpoint value into midPointValue.
+		Returns false if the string value is anything else than "disabled"
+	*/
+	static bool getMidPointValue(const var& midPointOrDisabledString, double& midPointValue);
+
+	/** Checks whether the midPointOrDisabledString should be applied to the given range. */
+	static bool shouldApplyMidPoint(double min, double max, const var& midPointOrDisabledString);
+
 	static void loadPathFromData(Path& p, var data);
 
 	static PathStrokeType createPathStrokeType(var strokeType);
+
+	using CallScope = WeakCallbackHolder::CallableObject::CallScope;
 
 #if USE_BACKEND
 
 	static String getValueType(const var& v);
 
 	static ValueTree getApiTree();
+
 	
+
+	struct CallScopeInfo
+	{
+		CallScope scope = CallScope::Unknown;
+		String note;
+	};
+
+	/** Look up the callScope for a given class + method.
+	 *
+	 *  Exact mode (className = specific class name):
+	 *    Finds the class child in the API ValueTree, finds the method by name,
+	 *    reads callScope string and converts to enum.
+	 *
+	 *  Greedy mode (className = "*"):
+	 *    Iterates all classes, collects every callScope for matching methodName.
+	 *    - If ANY are Safe: return Safe (don't warn — ambiguous)
+	 *    - If ALL are not-safe: return worst-case scope
+	 *    - If NO matches: return Unsafe (non-API dynamic dispatch)
+	 */
+	static CallScopeInfo getCallScope(const String& className, const String& methodName);
 
 #endif
 };
@@ -2181,6 +2212,9 @@ namespace ScriptingObjects
 
 		/** Returns the output channel that is mapped to the given input channel (or -1). */
 		var getDestinationChannelForSource(var sourceIndex) const;
+
+		/** This forces the routing matrix to calculate its peak levels. */
+		void setForcePeakMeters(bool shouldBeEnabled);
 
 		// ============================================================================================================ 
 

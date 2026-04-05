@@ -113,7 +113,6 @@ public:
 		MenuRevertFile = 0x26000,
         
 		// Export Menu
-		MenuExportSetupWizard,
 		MenuExportCompileProject,
 		MenuExportFileAsPlugin,
 		MenuExportFileAsEffectPlugin,
@@ -178,6 +177,9 @@ public:
 		MenuToolsCheckCyclicReferences,
 		MenuToolsConvertSVGToPathData,
 		MenuToolsBroadcasterWizard,
+		MenuToolsToggleRestServer,
+		MenuToolsToggleRepl,
+		MenuToolsShowInteractionTestWindow,
 		MenuToolsCreateExternalScriptFile,
 		
 		// ---------------------------------
@@ -394,8 +396,6 @@ public:
 		static void extractEmbeddedFilesFromSnippet(BackendRootWindow* bpe);
 
 		static void showExampleBrowser(BackendRootWindow* bpe);
-
-		static void setupExportWizard(BackendRootWindow* bpe);
 
 		static void exportProject(BackendRootWindow* bpe, int buildOption);
 
