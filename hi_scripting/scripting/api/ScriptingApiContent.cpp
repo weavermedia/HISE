@@ -8600,11 +8600,13 @@ void ScriptingApi::Content::rebuildComponentListFromValueTree()
 
 	restoreFromValueTree(currentState);
 
+	updateParameterSlots();
+
 	asyncRebuildBroadcaster.notify();
 
 	auto p = dynamic_cast<Processor*>(getScriptProcessor());
 
-	updateParameterSlots();
+	
 
 	if (p->getMainController()->getScriptComponentEditBroadcaster()->isBeingEdited(p))
 	{
