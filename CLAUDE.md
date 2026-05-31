@@ -4,6 +4,15 @@
 
 **NO EM-DASHES. NO SMART QUOTES. NO NON-ASCII CHARACTERS. EVER.** All text output - code, comments, documentation, strings, commit messages - must be ASCII-only. Use regular dashes (-), straight quotes, and three dots (...). This rule is non-negotiable and applies to every file in this repository without exception.
 
+## Fork Setup (read first)
+
+This is Dan's personal fork (`weavermedia/HISE`), not the upstream repository. The maintainer of this fork is Dan, who does all custom work on the `meatbeats` branch. The `develop` branch is kept 1:1 with upstream `christophhart/HISE` and is only used to pull in upstream changes before merging them into `meatbeats`.
+
+Because of this, references elsewhere in upstream docs to "Christoph" owning builds and commits do NOT apply here. The authoritative rules for this fork are:
+
+- **Builds:** Dan runs all builds manually in Xcode. Never attempt to build HISE or run unit tests yourself.
+- **Git:** Claude may stage, commit, and branch when Dan explicitly asks, following the repo's commit conventions. Do not commit or alter git state unprompted.
+
 ## Project Overview
 
 HISE (Hart Instruments Sampling Engine) is a cross-platform C++17 audio framework built on JUCE for creating virtual instruments (VST/AU/AAX plugins and standalone apps). This repository contains the core modules layer (`hi_core`, `hi_backend`, `hi_scripting`, `hi_dsp_library`, etc.).
@@ -12,7 +21,7 @@ HISE (Hart Instruments Sampling Engine) is a cross-platform C++17 audio framewor
 
 HISE uses **Projucer** (JUCE's project tool) to generate IDE projects from `.jucer` files. There is no CMake build at the project level.
 
-**IMPORTANT: Never attempt to build HISE yourself. The maintainer (Christoph) always builds. Never touch git either -- Christoph handles all commits.**
+**IMPORTANT: Never attempt to build HISE yourself.** Dan runs all builds manually in Xcode. See "Fork Setup" above for the git policy.
 
 ### Build Configurations
 
@@ -23,7 +32,7 @@ HISE uses **Projucer** (JUCE's project tool) to generate IDE projects from `.juc
 | CI | CI builds + unit tests | `HI_RUN_UNIT_TESTS=1`, `HISE_CI=1` |
 | Minimal Build | Debug without optional modules | No Faust/Loris/rLottie/RTNeural |
 
-Builds are done manually by the maintainer using Projucer-generated IDE projects (Visual Studio / Xcode). Unit tests are run by the maintainer in the debugger after each feature iteration. Never attempt to build or run tests yourself.
+Builds are done manually by Dan using Projucer-generated IDE projects (Xcode). Unit tests are run manually in the debugger after each feature iteration. Never attempt to build or run tests yourself.
 
 ## Build Configurations (Backend vs Frontend vs DLL)
 
