@@ -1658,6 +1658,36 @@ hise::CompileExporter::ErrorCodes CompileExporter::createPluginProjucerFile(Targ
 	REPLACE_WILDCARD("%BUNDLE_ID%", HiseSettings::Project::BundleIdentifier);
 	REPLACE_WILDCARD("%PC%", HiseSettings::Project::PluginCode);
 
+	// The AU factory symbol (JucePlugin_AUExportPrefix) is dlsym'd by name at load time and
+	// must be a valid C identifier. Projucer derives it from the project name via
+	// makeValidIdentifier; HISE's template used to hardcode "DemoProjectAU", so every exported
+	// AU shipped the same internal factory name. Mirror Projucer here so the prefix tracks the
+	// project name (e.g. "My Plugin" -> "MyPluginAU"). We do not reuse %NAME% directly because
+	// the value is written verbatim into AppConfig.h and would break the build if the project
+	// name contains spaces or punctuation.
+	{
+		auto projectName = GET_SETTING(HiseSettings::Project::Name);
+
+		StringArray words;
+		words.addTokens(projectName.retainCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_ 0123456789"), false);
+		words.trim();
+
+		String auPrefix;
+
+		for (const auto& w : words)
+			auPrefix << w;
+
+		if (auPrefix.isEmpty())
+			auPrefix = "Plugin";
+
+		if (CharacterFunctions::isDigit(auPrefix[0]))
+			auPrefix = "_" + auPrefix;
+
+		auPrefix << "AU";
+
+		REPLACE_WILDCARD_WITH_STRING("%AU_EXPORT_PREFIX%", auPrefix);
+	}
+
 	ProjectTemplateHelpers::handleVisualStudioVersion(dataObject,templateProject);
 
 	REPLACE_WILDCARD_WITH_STRING("%CHANNEL_CONFIG%", "");

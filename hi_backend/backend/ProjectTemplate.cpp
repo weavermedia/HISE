@@ -43,7 +43,7 @@ static const unsigned char projectTemplate_jucer_lines[] = R"(
               pluginDesc="%NAME%" pluginManufacturer="%COMPANY%" pluginManufacturerCode="%MC%"
               pluginCode="%PC%" pluginChannelConfigs="%CHANNEL_CONFIG%" pluginIsSynth="%PLUGINISSYNTH%"
               pluginWantsMidiIn="%PLUGINWANTSMIDIIN%" pluginProducesMidiOut="%PLUGIN_PRODUCES_MIDI_OUT%" pluginIsMidiEffectPlugin="%PLUGINISMIDIFX%"
-              pluginEditorRequiresKeys="1" pluginAUExportPrefix="DemoProjectAU"
+              pluginEditorRequiresKeys="1" pluginAUExportPrefix="%AU_EXPORT_PREFIX%"
               pluginRTASCategory="" aaxIdentifier="%AAX_IDENTIFIER%"
               pluginAAXCategory="%AAX_CATEGORY%" pluginVST3Category="%VST3_CATEGORY%" jucerVersion="5.2.0"
               companyName="%COMPANY%" companyWebsite="%COMPANY_WEBSITE%" companyCopyright="%COMPANY_COPYRIGHT%"
