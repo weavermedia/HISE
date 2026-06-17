@@ -70,11 +70,15 @@ else
 fi
 
 # --- Verify output -----------------------------------------------------------
-app_path="$standalone_folder/Builds/MacOSX/build/$config/HISE.app"
-if [ -d "$app_path" ]; then
+# The .app filename follows the per-config targetName in the .jucer (e.g. Debug
+# produces "HISE Debug.app", Release produces "HISE.app"), so glob for whatever
+# .app the build dropped in the config folder rather than hardcoding a name.
+build_dir="$standalone_folder/Builds/MacOSX/build/$config"
+app_path="$(find "$build_dir" -maxdepth 1 -type d -name '*.app' 2>/dev/null | head -n 1)"
+if [ -n "$app_path" ] && [ -d "$app_path" ]; then
   echo "Build completed successfully."
-  echo "HISE.app is at $repo_root/$app_path"
+  echo "App is at $repo_root/$app_path"
 else
-  echo "Error: built app not found at $app_path" >&2
+  echo "Error: built app not found in $build_dir" >&2
   exit 1
 fi
