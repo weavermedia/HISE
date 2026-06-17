@@ -23,3 +23,4 @@ Trivial bug fixes, routine refactors, and anything fully captured by a commit me
 
 - [shapefx-gain-modulation.md](shapefx-gain-modulation.md) - Why ShapeFX's Gain cannot be envelope-modulated, and why PolyshapeFX is the right tool for that use case.
 - [preset-save-workflow.md](preset-save-workflow.md) - Shipping read-only factory presets now and adding user saving later: folder layout, project settings, save routing, and the always-on Save decision.
+- [persistent-ui-state-appdata.md](persistent-ui-state-appdata.md) - Persisting a per-plugin UI preference (hide/show keyboard) globally across instances without it entering presets: why not General Settings.xml, and the own-JSON-in-AppData approach.
