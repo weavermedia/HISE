@@ -1,0 +1,7 @@
+# Projucer regenerates these files on every project resave (the build script does this
+# before each build) and always writes CRLF line endings. With core.autocrlf=input git
+# kept trying to normalize them to LF, so every build showed them as modified. Mark them
+# as binary (-text) so git stores them verbatim and never converts line endings; only a
+# real content change (e.g. a project version bump) will show as a diff from now on.
+projects/standalone/JuceLibraryCode/AppConfig.h -text
+projects/standalone/JuceLibraryCode/JuceHeader.h -text
