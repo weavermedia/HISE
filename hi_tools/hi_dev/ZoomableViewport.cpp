@@ -247,7 +247,9 @@ void ZoomableViewport::mouseMagnify (const MouseEvent& e, float scaleFactor)
 
 void ZoomableViewport::mouseWheelMove(const MouseEvent& e, const MouseWheelDetails& wheel)
 {
-	if (e.mods.isCommandDown())
+	// Ignore inertial (momentum) wheel events for zooming so the scroll tail
+	// after lifting off the trackpad does not zoom when CMD goes down for CMD+TAB.
+	if (e.mods.isCommandDown() && !wheel.isInertial)
 	{
 		const float zoomSpeed = e.mods.isShiftDown() ? 1.03f : 1.15f;
 
