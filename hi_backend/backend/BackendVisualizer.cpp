@@ -888,6 +888,8 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::run()
 {
 	while(!threadShouldExit())
 	{
+		auto frameStart = Time::getMillisecondCounter();
+
 		std::pair<float, float> thisPeak;
 
 		{
@@ -960,7 +962,10 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::run()
 			}
 		}
 
-		wait(15);
+		// Target ~60fps: wait out the remainder of the 16ms frame budget rather than a
+		// flat 15ms, so the rate stays steady regardless of how long the calculation took.
+		auto elapsed = (int)(Time::getMillisecondCounter() - frameStart);
+		wait(jmax(1, 16 - elapsed));
 	}
 }
 
@@ -1126,10 +1131,18 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::paint(Graphics& g)
 		auto secondIndex = 1 - firstIndex;
 
 		if(alpha[firstIndex] > 0.01f)
-			infos[firstIndex][(int)currentMode]->draw(g, alpha[firstIndex]);
+		{
+			auto fi = infos[firstIndex][(int)currentMode];
+			ScopedLock sl(fi->pathLock);
+			fi->draw(g, alpha[firstIndex]);
+		}
 
 		if(alpha[secondIndex] > 0.01f)
-			infos[secondIndex][(int)currentMode]->draw(g, alpha[secondIndex]);
+		{
+			auto si = infos[secondIndex][(int)currentMode];
+			ScopedLock sl(si->pathLock);
+			si->draw(g, alpha[secondIndex]);
+		}
 		
 	}
 
@@ -1360,10 +1373,10 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::Spec2DInfo::calculate(const
 	
 	auto newImage = spectrum.createSpectrumImage(sb);
 
-	MessageManagerLock mm(Thread::getCurrentThread());
-
-	if(mm.lockWasGained())
+	{
+		ScopedLock sl(pathLock);
 		std::swap(newImage, img);
+	}
 }
 
 Spectrum2D::Parameters::Ptr MainTopBar::ClickablePeakMeter::PopupComponent::Spec2DInfo::getParameters() const
@@ -1380,10 +1393,9 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::FFTInfo::calculate(const Au
 	auto np = rbo->createPath({}, {}, contentArea.withPosition(0.0f, 0.0f).toFloat(), 0.0);
 	np.applyTransform(AffineTransform::translation(contentArea.getX(), contentArea.getY()));
 
-	MessageManagerLock mm(Thread::getCurrentThread());
-
-	if(mm.lockWasGained())
 	{
+		ScopedLock sl(pathLock);
+
 		for(auto i = fftPaths.size()-1; i >= 1 ; i--)
 			std::swap(fftPaths[i], fftPaths[i-1]);
 
@@ -1508,10 +1520,9 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::OscInfo::calculate(const Au
 
 	cyclePath.lineTo(cb.getRight(), cb.getCentreY());
 
-	MessageManagerLock mm(Thread::getCurrentThread());
-
-	if(mm.lockWasGained())
 	{
+		ScopedLock sl(pathLock);
+
 		for(auto i = cyclePaths.size()-1; i >= 1; i--)
 			std::swap(cyclePaths[i], cyclePaths[i-1]);
 
@@ -1715,9 +1726,11 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::PitchTrackInfo::calculate(c
 		}
 	}
 
-	MessageManagerLock mm(Thread::getCurrentThread());
-	prePath = path0;
-	pitchPath = path1;
+	{
+		ScopedLock sl(pathLock);
+		prePath = path0;
+		pitchPath = path1;
+	}
 }
 
 void MainTopBar::ClickablePeakMeter::PopupComponent::CpuInfo::draw(Graphics& g, float baseAlpha)
@@ -1785,10 +1798,9 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::CpuInfo::calculate(const Au
 	path.lineTo(area.getRight(), area.getBottom());
 	path.closeSubPath();
 	
-	MessageManagerLock mm(Thread::getCurrentThread());
-
-	if(mm.lockWasGained())
 	{
+		ScopedLock sl(pathLock);
+
 		for(auto i = cpuPaths.size()-1; i >= 1; i--)
 			std::swap(cpuPaths[i], cpuPaths[i-1]);
 
@@ -1911,10 +1923,9 @@ void MainTopBar::ClickablePeakMeter::PopupComponent::EnvInfo::calculate(const Au
 	
 	area = contentArea;
 
-	MessageManagerLock mm(Thread::getCurrentThread());
-
-	if(mm.lockWasGained())
 	{
+		ScopedLock sl(pathLock);
+
 		for(auto i = envPaths.size()-1; i >= 1; i--)
 			std::swap(envPaths[i], envPaths[i-1]);
 

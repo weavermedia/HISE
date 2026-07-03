@@ -296,6 +296,12 @@ struct MainTopBar::ClickablePeakMeter::PopupComponent: public Component,
 		const bool isPost;
 		SimpleRingBuffer::PropertyObject::Ptr rbo;
 
+		/** Guards the swap of freshly calculated paths/images (worker thread) against the
+		    draw() read (message thread). Calculation stays outside this lock, so it is only
+		    ever held for the duration of a cheap swap or a single draw - cheaper than the
+		    MessageManagerLock round-trip the calculate() methods used to take per frame. */
+		CriticalSection pathLock;
+
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InfoBase);
 	};
 
