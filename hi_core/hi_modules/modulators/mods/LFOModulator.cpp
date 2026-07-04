@@ -791,15 +791,24 @@ void LfoModulator::handleHiseEvent(const HiseEvent &m)
 	}
 	if(m.isNoteOn())
 	{
-		if((legato == false || keysPressed == 0) && !ignoreNoteOn)
+		if(legato == false || keysPressed == 0)
 		{
-            resetPhase();
-            
-			for (auto& mb : modChains)
-				mb.startVoice(0);
+			if(!ignoreNoteOn)
+			{
+				resetPhase();
 
-			frequencyModulationValue = modChains[FrequencyChain].getConstantModulationValue();
-			calcAngleDelta();
+				for (auto& mb : modChains)
+					mb.startVoice(0);
+
+				frequencyModulationValue = modChains[FrequencyChain].getConstantModulationValue();
+				calcAngleDelta();
+			}
+			else
+			{
+				// IgnoreNoteOn only keeps the phase free-running - the
+				// fade-in ramp still restarts on each (non-legato) note.
+				resetFadeIn();
+			}
 		}
 
 		keysPressed++;
