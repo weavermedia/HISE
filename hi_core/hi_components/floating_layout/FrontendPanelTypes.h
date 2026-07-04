@@ -712,6 +712,7 @@ public:
 		Inverted,
 		Minimum,
 		Maximum,
+		Delete,
 		numColumns,
 		columnWidthRatio
 	};
@@ -848,6 +849,27 @@ protected:
 		int row;
 		int columnId;
 		HiPropertyPanelLookAndFeel laf;
+	};
+
+	class DeleteButton : public Component,
+		public ButtonListener
+	{
+	public:
+
+		DeleteButton(TableFloatingTileBase &owner_);
+
+		void resized();
+		void setRow(const int newRow);
+		void setColours(Colour normalColour, Colour overColour);
+		void buttonClicked(Button *b);
+
+		ScopedPointer<ShapeButton> t;
+
+	private:
+
+		TableFloatingTileBase &owner;
+
+		int row;
 	};
 
 	TableListBox table;     // the table component itself

@@ -1728,6 +1728,54 @@ void TableFloatingTileBase::InvertedButton::buttonClicked(Button *b)
 	owner.setInverted(row, b->getToggleState());
 }
 
+TableFloatingTileBase::DeleteButton::DeleteButton(TableFloatingTileBase &owner_) :
+	owner(owner_)
+{
+	auto normalColour = Colour(0x99ffffff);
+
+	addAndMakeVisible(t = new ShapeButton("Delete", normalColour, normalColour.withMultipliedAlpha(1.5f), normalColour));
+
+	Path p;
+	p.loadPathFromData(HiBinaryData::ProcessorEditorHeaderIcons::closeIcon, SIZE_OF_PATH(HiBinaryData::ProcessorEditorHeaderIcons::closeIcon));
+
+	t->setShape(p, false, true, false);
+	t->addListener(this);
+	t->setTooltip("Remove this assignment.");
+}
+
+void TableFloatingTileBase::DeleteButton::resized()
+{
+	auto b = getLocalBounds();
+	auto squareSize = jmin(b.getWidth(), b.getHeight()) - 12;
+	t->setBounds(b.withSizeKeepingCentre(squareSize, squareSize));
+}
+
+void TableFloatingTileBase::DeleteButton::setColours(Colour normalColour, Colour overColour)
+{
+	t->setColours(normalColour, overColour, overColour);
+	t->repaint();
+}
+
+void TableFloatingTileBase::DeleteButton::setRow(const int newRow)
+{
+	row = newRow;
+}
+
+void TableFloatingTileBase::DeleteButton::buttonClicked(Button *)
+{
+	// removeEntry() triggers updateContent(), which deletes this
+	// component while its click callback is still on the stack,
+	// so the removal must be deferred.
+	Component::SafePointer<TableFloatingTileBase> safeOwner(&owner);
+	auto r = row;
+
+	MessageManager::callAsync([safeOwner, r]
+	{
+		if (safeOwner != nullptr)
+			safeOwner->deleteKeyPressed(r);
+	});
+}
+
 TableFloatingTileBase::ValueSliderColumn::ValueSliderColumn(TableFloatingTileBase &table) :
 	owner(table)
 {
@@ -1823,6 +1871,7 @@ void TableFloatingTileBase::initTable(bool addChannelColumn)
 	table.getHeader().addColumn("Inverted", Inverted, 70, 70, 70);
 	table.getHeader().addColumn("Min", Minimum, 70, 70, 70);
 	table.getHeader().addColumn("Max", Maximum, 70, 70, 70);
+	table.getHeader().addColumn("", Delete, 28, 28, 28);
 	table.getHeader().setStretchToFitActive(true);
 }
 
@@ -2137,6 +2186,19 @@ Component* TableFloatingTileBase::refreshComponentForCell(int rowNumber, int col
 		b->t->setColour(TextButton::textColourOffId, textColour);
 
 		b->setRowAndColumn(rowNumber, isInverted(rowNumber));
+
+		return b;
+	}
+	else if (columnId == Delete)
+	{
+		DeleteButton* b = dynamic_cast<DeleteButton*> (existingComponentToUpdate);
+
+		if (b == nullptr)
+			b = new DeleteButton(*this);
+
+		b->setColours(textColour, textColour.withMultipliedAlpha(1.5f));
+
+		b->setRow(rowNumber);
 
 		return b;
 	}
