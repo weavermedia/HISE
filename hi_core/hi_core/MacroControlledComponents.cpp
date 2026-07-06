@@ -160,10 +160,20 @@ void MacroControlledObject::enableMidiLearnWithPopup()
 		{
 			auto value = handler->getMidiControllerNumber(processor, parameterToUse);
 
+			int numAdded = 0;
+
 			for (int i = 0; i < 128; i++)
 			{
 				if (handler->shouldAddControllerToPopup(i))
+				{
+					// Explicit column breaks make JUCE use exactly these columns
+					// instead of the fit-to-screen-height heuristic
+					if (numAdded != 0 && numAdded % 16 == 0)
+						mToUse.addColumnBreak();
+
 					mToUse.addItem(i + MidiOffset, handler->getControllerName(i), handler->isMappable(i), value.isValid() && i == value.ccNumber);
+					numAdded++;
+				}
 			}
 		};
 
