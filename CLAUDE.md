@@ -2,7 +2,7 @@
 
 ## ABSOLUTE RULES
 
-**NO EM-DASHES. NO SMART QUOTES. NO NON-ASCII CHARACTERS. EVER.** All text output - code, comments, documentation, strings, commit messages - must be ASCII-only. Use regular dashes (-), straight quotes, and three dots (...). This rule is non-negotiable and applies to every file in this repository without exception.
+**NO EM-DASHES. EVER.** Never write an em-dash in any text output - code, comments, documentation, strings, commit messages. Where a dash is needed in prose, use an en-dash instead; in code, comments, and commit messages prefer a plain hyphen (-). No smart quotes (use straight quotes) and no other non-ASCII characters beyond the en-dash - use three dots (...) instead of an ellipsis character. This rule is non-negotiable and applies to every file in this repository without exception.
 
 ## Fork Setup (read first)
 
