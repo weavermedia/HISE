@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10 (diagnosed in Sublime, MIDI learn UX review)
 **Target commit:** `86680e63d` (branch `meatbeats`)
-**Status:** DONE - landed in meatbeats `bd6cfc9c7` (2026-07-10), verified in the editor; upstreamed as [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995). Applied as proposed, except the PreprocessorDatabase entry sits after `HISE_MACROS_ARE_PLUGIN_PARAMETERS` (the section is alphabetical) rather than directly next to `HISE_ENABLE_MIDI_LEARN`.
+**Status:** DONE - landed in meatbeats `bd6cfc9c7` (2026-07-10), verified in the editor; upstreamed as [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995), which was closed unmerged on 2026-07-11 (Christoph: data model must keep CC assignments, forum topic 14914 post 37) - both flags are fork-only. Applied as proposed, except the PreprocessorDatabase entry sits after `HISE_MACROS_ARE_PLUGIN_PARAMETERS` (the section is alphabetical) rather than directly next to `HISE_ENABLE_MIDI_LEARN`.
 **Affects:** every project using the stock MIDI learn / `MidiLearnPanel`
 
 ## Symptom

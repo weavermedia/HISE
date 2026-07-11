@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10 (follow-up to `HISE_MIDI_AUTOMATION_IN_USER_PRESETS`, fork commit `5b09675f2`)
 **Target commit:** `67fa79271` (branch `meatbeats`)
-**Status:** DONE - landed in meatbeats `422dfa104` (2026-07-11), verified across all four flag combinations (editor + exported plugins); pushed to [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995) as companion commit `70bd24ef3`, PR retitled to cover the pair. Applied as proposed, plus: the `HISE_MIDI_AUTOMATION_IN_USER_PRESETS` doc comment and database entry were qualified to reference this flag (their "still saved in instance state" wording is only true when this flag is enabled), and the database entry sits alphabetically before the USER_PRESETS entry.
+**Status:** DONE - landed in meatbeats `422dfa104` (2026-07-11), verified across all four flag combinations (editor + exported plugins); pushed to [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995) as companion commit `70bd24ef3`, PR retitled to cover the pair and closed unmerged on 2026-07-11 (rejected upstream; fork-only). Sublime ships per-instance (USER_PRESETS=0 only, this flag left at 1) with manual Save/Load mapping buttons planned. Applied as proposed, plus: the `HISE_MIDI_AUTOMATION_IN_USER_PRESETS` doc comment and database entry were qualified to reference this flag (their "still saved in instance state" wording is only true when this flag is enabled), and the database entry sits alphabetically before the USER_PRESETS entry.
 **Affects:** projects managing MIDI CC assignments themselves (e.g. Sublime's global `MidiMappings.json` via `Engine.createMidiAutomationHandler()`)
 
 ## Symptom
