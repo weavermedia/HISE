@@ -328,7 +328,7 @@
 #endif
 
 #ifndef    HISE_LOG_FILTER_FREQMOD
- //#define HISE_LOG_FILTER_FREQMOD 0
+ #define   HISE_LOG_FILTER_FREQMOD 1
 #endif
 
 //==============================================================================
