@@ -133,9 +133,7 @@ juce::ValueTree UserPresetHelpers::createUserPreset(ModulatorSynthChain* chain)
 	}
 #endif
 
-	if (HISE_GET_PREPROCESSOR(chain->getMainController(), HISE_MIDI_AUTOMATION_IN_USER_PRESETS))
-		chain->getMainController()->getUserPresetHandler().saveStateManager(preset, UserPresetIds::MidiAutomation);
-
+	chain->getMainController()->getUserPresetHandler().saveStateManager(preset, UserPresetIds::MidiAutomation);
 	chain->getMainController()->getUserPresetHandler().saveStateManager(preset, UserPresetIds::MPEData);
 
 	preset.setProperty("Version", getCurrentVersionNumber(chain), nullptr);

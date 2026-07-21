@@ -207,8 +207,7 @@ ValueTree ModulatorSynthChain::exportAsValueTree() const
 
 		MacroControlBroadcaster::saveMacrosToValueTree(v);
 
-		if (HISE_GET_PREPROCESSOR(getMainController(), HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE))
-			v.addChild(getMainController()->getMacroManager().getMidiControlAutomationHandler()->exportAsValueTree(), -1, nullptr);
+		v.addChild(getMainController()->getMacroManager().getMidiControlAutomationHandler()->exportAsValueTree(), -1, nullptr);
 
 		v.addChild(getMainController()->getMacroManager().getMidiControlAutomationHandler()->getMPEData().exportAsValueTree(), -1, nullptr);
 	}
@@ -413,8 +412,7 @@ void ModulatorSynthChain::restoreFromValueTree(const ValueTree &v)
 
 	ModulatorSynth::restoreFromValueTree(v);
 
-	if (!getMainController()->shouldSkipCompiling()
-		&& HISE_GET_PREPROCESSOR(getMainController(), HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE))
+	if (!getMainController()->shouldSkipCompiling())
 	{
 		ValueTree autoData = v.getChildWithName("MidiAutomation");
 
