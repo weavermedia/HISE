@@ -470,7 +470,7 @@ void ProcessorWithScriptingContent::restoreContent(const ValueTree &restoredStat
 		{
 			restoredContentValues = restoredState;
 
-			getMainController_()->getUserPresetHandler().restoreStateManager(restoredState, UserPresetIds::CustomJSON);
+			getMainController_()->getUserPresetHandler().restoreStateManager(restoredState, UserPresetIds::CustomJSON, UserPresetStateManager::StateTarget::PluginState);
 		}
 	}
 	else
@@ -1447,7 +1447,7 @@ JavascriptProcessor::SnippetResult JavascriptProcessor::compileInternal()
 			{
 				thisAsScriptBaseProcessor->restoredContentValues = ValueTree("Content");
 
-				uph.saveStateManager(thisAsScriptBaseProcessor->restoredContentValues, UserPresetIds::CustomJSON);
+				uph.saveStateManager(thisAsScriptBaseProcessor->restoredContentValues, UserPresetIds::CustomJSON, UserPresetStateManager::StateTarget::PluginState);
 			}
 		}
 		else
@@ -1568,7 +1568,7 @@ JavascriptProcessor::SnippetResult JavascriptProcessor::compileInternal()
 
 			if (uph.isUsingPersistentObject())
 			{
-				uph.restoreStateManager(thisAsScriptBaseProcessor->restoredContentValues, UserPresetIds::CustomJSON);
+				uph.restoreStateManager(thisAsScriptBaseProcessor->restoredContentValues, UserPresetIds::CustomJSON, UserPresetStateManager::StateTarget::PluginState);
 			}
 		}
 		else
@@ -1664,6 +1664,9 @@ void JavascriptProcessor::shadowParseFile(const String& code, const String& file
 		callback(diagnostics);
 		return;
 	}
+
+	// prevent the last compilation from spamming the console.
+	lastResult = Result::ok();
 
 	// Async path (IDE F7): defer to scripting thread, callback on message thread.
 	auto f = [code, fileName, callback](Processor* p)

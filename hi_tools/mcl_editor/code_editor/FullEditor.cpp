@@ -110,6 +110,8 @@ void FullEditor::loadSettings(const File& sFile)
     editor.showStickyLines = s.getProperty(TextEditorSettings::ShowStickyLines, true);
     editor.enableCmdScrollFontResize = s.getProperty(TextEditorSettings::EnableCmdScrollFontResize, true);
     editor.enableHorizontalScrollPastLineEnds = s.getProperty(TextEditorSettings::EnableHorizontalScrollPastLineEnds, true);
+
+	editor.shadowParseAfterDelay = s.getProperty(TextEditorSettings::EnableLiveDiagnostics, true);
 }
 
 void FullEditor::saveSetting(Component* c, const Identifier& id, const var& newValue)
@@ -139,6 +141,10 @@ void FullEditor::saveSetting(Component* c, const Identifier& id, const var& newV
 	if (id == TextEditorSettings::AutoAutocomplete)
 	{
 		pe->editor.showAutocompleteAfterDelay = (bool)newValue;
+	}
+	if (id == TextEditorSettings::EnableLiveDiagnostics)
+	{
+		pe->editor.shadowParseAfterDelay = (bool)newValue;
 	}
     if (id == TextEditorSettings::ShowStickyLines)
     {
