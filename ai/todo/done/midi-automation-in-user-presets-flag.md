@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10 (diagnosed in Sublime, MIDI learn UX review)
 **Target commit:** `86680e63d` (branch `meatbeats`)
-**Status:** DONE - landed in meatbeats `bd6cfc9c7` (2026-07-10), verified in the editor; upstreamed as [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995), which was closed unmerged on 2026-07-11 (Christoph: data model must keep CC assignments, forum topic 14914 post 37) - both flags are fork-only. Applied as proposed, except the PreprocessorDatabase entry sits after `HISE_MACROS_ARE_PLUGIN_PARAMETERS` (the section is alphabetical) rather than directly next to `HISE_ENABLE_MIDI_LEARN`.
+**Status:** DONE - landed in meatbeats `bd6cfc9c7` (2026-07-10), verified in the editor; upstreamed as [christophhart/HISE#995](https://github.com/christophhart/HISE/pull/995), which was closed unmerged on 2026-07-11 (Christoph: data model must keep CC assignments, forum topic 14914 post 37) - both flags are fork-only. Applied as proposed, except the PreprocessorDatabase entry sits after `HISE_MACROS_ARE_PLUGIN_PARAMETERS` (the section is alphabetical) rather than directly next to `HISE_ENABLE_MIDI_LEARN`. **REVERTED** in meatbeats `18a87bcac` (2026-07-21): upstream `528ccf7` shipped a runtime equivalent, `UserPresetHandler.setStateManagerProperties()`, so this flag's behaviour is now stock via `SubStates: { MidiAutomation: "PluginState" }` - see the revert note at the end of this doc.
 **Affects:** every project using the stock MIDI learn / `MidiLearnPanel`
 
 ## Symptom
@@ -161,3 +161,50 @@ data["HISE_MIDI_AUTOMATION_IN_USER_PRESETS"] = Entry()
 Worth proposing to Christoph as-is: default preserves existing projects, and
 "MIDI learn shouldn't be patch data" is the standard end-user expectation for
 synths. Pairs naturally with the existing `HISE_ENABLE_MIDI_LEARN` flag.
+
+## Revert (2026-07-21)
+
+Both flags were reverted from `meatbeats` in `18a87bcac` (code) and
+`347aec6d5` (AppConfig.h resync). Upstream commit `528ccf7` landed a runtime
+API that covers the same ground without preprocessors - Christoph's stated
+reason for closing PR #995 was that this should not be a compile-time setting.
+
+Each state manager now carries a `StateTarget` bitmask
+(`hi_core/hi_core/PresetHandler.h`): `None = 0x00`, `PluginState = 0x01`,
+`UserPreset = 0x02`, `Default = 0x03`, `External = 0x04`. It is configured
+from `onInit`:
+
+```javascript
+uph.setStateManagerProperties({
+    ExternalFile: "<path>",        // optional; default AppData/ExternalPresetData.xml
+    ExternalFileDefault: { ... },  // optional seed values if the file does not exist
+    SubStates: {
+        MidiAutomation: "PluginState",   // string, or array e.g. ["PluginState","UserPreset"]
+        MPEData: "Default",
+        macro_controls: "External"
+    }
+});
+```
+
+Only three `SubStates` ids are legal (validated in `MainController.cpp`):
+`MidiAutomation`, `MPEData`, `macro_controls`. `Default` and `External` are
+mutually exclusive. `getStateManagersForTarget("UserPreset"|"PluginState"|"External")`
+reads the configuration back.
+
+The fork's `USER_PRESETS=0` + `PLUGIN_STATE=1` combination (per-instance CC
+assignments that survive preset browsing, Sublime's shipping configuration) is
+now expressed as:
+
+```javascript
+uph.setStateManagerProperties({ SubStates: { MidiAutomation: "PluginState" } });
+```
+
+`External` additionally writes one XML shared by all instances, updated
+automatically on MIDI-learn and macro-connection changes
+(`MainControllerHelpers.cpp`, `MacroControlBroadcaster.cpp`). That is the
+all-instances-respond-to-one-CC behaviour the fork deliberately avoided, so
+Sublime keeps its own manual Save/Load Default Map buttons and
+`AppData/MidiMappings.json` instead.
+
+Reverting before merging upstream also avoids conflicts: `528ccf7` touches all
+five source files the two fork commits touched.
