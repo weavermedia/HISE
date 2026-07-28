@@ -510,6 +510,7 @@ public:
 		FavoriteButtonBounds,
     FullPathFavorites,
     FavoriteIconOffset,
+		ShowFolderRows,
 		numSpecialProperties
 	};
 
