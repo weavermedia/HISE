@@ -1,0 +1,23 @@
+--- a/hi_core/hi_dsp/Processor.h
++++ b/hi_core/hi_dsp/Processor.h
+@@ -51,9 +51,18 @@
+ 
+ 
+ 
++/** Flushes near-zero float dust (e.g. 2.08e-17 from a bipolar conversion at
++	centre position) to an exact 0.0 before it is written to the ValueTree, so
++	stored XML doesn't accumulate scientific-notation values. The threshold is
++	far below any meaningful parameter value (1e-9 as a gain factor is -180dB). */
++static inline float flushAttributeDustToZero(float value)
++{
++	return (value < 1.0e-9f && value > -1.0e-9f) ? 0.0f : value;
++}
++
+ #define loadAttribute(name, nameAsString) (setAttribute(name, (float)v.getProperty(nameAsString, false), dontSendNotification))
+-#define saveAttribute(name, nameAsString) (v.setProperty(nameAsString, getAttribute(name), nullptr))
+-#define saveID(name) v.setProperty(#name, getAttribute(name), nullptr);
++#define saveAttribute(name, nameAsString) (v.setProperty(nameAsString, hise::flushAttributeDustToZero(getAttribute(name)), nullptr))
++#define saveID(name) v.setProperty(#name, hise::flushAttributeDustToZero(getAttribute(name)), nullptr);
+ #define loadID(name) setAttribute(name, (float)v.getProperty(#name, false), dontSendNotification);
+ 
+ #define loadAttributeWithDefault(parameterId) setAttribute(parameterId, v.getProperty(getIdentifierForParameterIndex(parameterId), getDefaultValue(parameterId)), dontSendNotification);
