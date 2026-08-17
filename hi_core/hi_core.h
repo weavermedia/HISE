@@ -36,7 +36,7 @@ BEGIN_JUCE_MODULE_DECLARATION
 
   ID:               hi_core
   vendor:           Hart Instruments
-  version:          4.9.3
+  version:          4.9.4
   name:             HISE Core module
   description:      The core classes for HISE
   website:          http://hise.audio
@@ -408,6 +408,20 @@ If true then the plugin will complain about the buffer size not being a multiple
  */  
 #ifndef HISE_INCLUDE_TEMPO_IN_PLUGIN_STATE
 #define HISE_INCLUDE_TEMPO_IN_PLUGIN_STATE 1
+#endif
+
+/** Config: HISE_FORCE_INACTIVE_MOD_RENDERING
+ Set this to 1 to enable modulators being rendered even if no voice is active or the effect processing is suspended.
+*/
+#ifndef HISE_FORCE_INACTIVE_MOD_RENDERING
+#define HISE_FORCE_INACTIVE_MOD_RENDERING 0
+#endif
+
+/** Config: HISE_LEGACY_INACTIVE_MOD_VALUES
+ Set this to 1 to restore neutral modulation values after the last voice has been reset.
+*/
+#ifndef HISE_LEGACY_INACTIVE_MOD_VALUES
+#define HISE_LEGACY_INACTIVE_MOD_VALUES 0
 #endif
 
 /** Config: ENABLE_ALL_PEAK_METERS

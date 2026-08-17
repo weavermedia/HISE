@@ -1171,11 +1171,17 @@ private:
 	{
 
 #if USE_BACKEND
-		if (isDiagnosticMode() && getCurrentNamespace() != hiseSpecialData)
+		if (isDiagnosticMode())
 		{
-			String msg;
-			msg << "var declarations within a namespace will leak to the global namespace.";
-			recordDiagnostic(location, msg, { "reg", "const" }, SV::Warning, CS::Language);
+            auto inNamespace = getCurrentNamespace() != hiseSpecialData;
+            auto inDefaultFunctionBody = currentFunctionObject != nullptr;
+            
+            if(inNamespace && !inDefaultFunctionBody)
+            {
+                String msg;
+                msg << "var declarations within a namespace will leak to the global namespace.";
+                recordDiagnostic(location, msg, { "reg", "const" }, SV::Warning, CS::Language);
+            }
 		}
 #endif
 
@@ -1693,12 +1699,15 @@ private:
 
 	Expression* parseInlineFunctionCall(InlineFunction::Object *obj)
 	{
-		ScopedPointer<InlineFunction::FunctionCall> f = new InlineFunction::FunctionCall(location, obj);
+        ScopedPointer<InlineFunction::FunctionCall> f = new InlineFunction::FunctionCall(location, obj);
 
 		parseIdentifier();
 
 		if (currentType == TokenTypes::openParen)
 		{
+            if(currentInlineFunction == obj)
+                location.throwError("Recursive function call!");
+            
 			match(TokenTypes::openParen);
 
 			while (currentType != TokenTypes::closeParen)
@@ -2464,6 +2473,12 @@ private:
 			auto type = vr.getRegisterVarType(registerIndex);
 			return parseSuffixes(new RegisterName(location, parseIdentifier(), &vr, registerIndex, getRegisterData(registerIndex, ns), type));
 		}
+
+#if 0
+        // Breaking change: return undefined instead of ignoring the namespace qualifier...
+        match(TokenTypes::identifier);
+        return parseSuffixes(new Expression(location));
+#endif
 
 		return parseFactor(nullptr);
 	}
