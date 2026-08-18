@@ -104,11 +104,11 @@ static const unsigned char projectStandaloneTemplate_jucer_lines[] = R"(
                    extraFrameworks="Security"
                    externalLibraries="%BEATPORT_LIB_MACOS%;%OSX_EXTERNAL_LIBRARIES%">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="11.0 SDK" osxArchitecture="%MACOS_ARCHITECTURE%"
+        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="10.14 SDK" osxArchitecture="%MACOS_ARCHITECTURE%"
                        isDebug="1" optimisation="1" targetName="%NAME% Debug"
                        headerPath="%FAUST_HEADER_PATH%" libraryPath="%BEATPORT_DEBUG_LIB%;%OSC_STATIC_LIB_FOLDER_DEBUG%"
                        cppLibType="libc++" binaryPath="Compiled/"/>
-        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="11.0 SDK" osxArchitecture="%MACOS_ARCHITECTURE%"
+        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="10.14 SDK" osxArchitecture="%MACOS_ARCHITECTURE%"
                        isDebug="0" optimisation="3" targetName="%NAME%" headerPath="%FAUST_HEADER_PATH%"
                        libraryPath="%BEATPORT_RELEASE_LIB%;%OSC_STATIC_LIB_FOLDER_RELEASE%" cppLibType="libc++" linkTimeOptimisation="%LINK_TIME_OPTIMISATION%"
                        binaryPath="Compiled/" %STRIP_SYMBOLS_MACOS%/>
@@ -157,12 +157,12 @@ R"(    <MACOSX_MAKE targetFolder="Builds/MacOSXMakefile" vstLegacyFolder="%VSTSD
                  compileFirstPatterns="*hi_scripting_01*, *hi_tools_01*, *hi_scripting_03*"
                  featureGatedModules="hi_rlottie:HISE_INCLUDE_RLOTTIE, hi_loris:HISE_INCLUDE_LORIS">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" osxArchitecture="%MACOS_MAKE_ARCHITECTURE%"
+        <CONFIGURATION name="Debug" osxArchitecture="%MACOS_MAKE_ARCHITECTURE%" macOSDeploymentTarget="10.14"
                        isDebug="1" optimisation="1" targetName="%NAME% Debug"
                        headerPath="%FAUST_HEADER_PATH%"
                        libraryPath="%BEATPORT_DEBUG_LIB%;%OSC_STATIC_LIB_FOLDER_DEBUG%"
                        binaryPath="Compiled/"/>
-        <CONFIGURATION name="Release" osxArchitecture="%MACOS_MAKE_ARCHITECTURE%"
+        <CONFIGURATION name="Release" osxArchitecture="%MACOS_MAKE_ARCHITECTURE%" macOSDeploymentTarget="10.14"
                        isDebug="0" optimisation="3" targetName="%NAME%"
                        headerPath="%FAUST_HEADER_PATH%"
                        libraryPath="%BEATPORT_RELEASE_LIB%;%OSC_STATIC_LIB_FOLDER_RELEASE%"
