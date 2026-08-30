@@ -582,7 +582,9 @@ public:
 		sd.f = getFont();
 		sd.fontSize = getFont().getHeight();
 
-		if (boldFontName.isNotEmpty())
+		// "Default" means "no dedicated bold font", so the style data falls back to
+		// boldening the panel font instead of switching to the global typeface.
+		if (boldFontName.isNotEmpty() && boldFontName != "Default")
 		{
 			sd.useSpecialBoldFont = true;
 			sd.boldFont = getMainController()->getFontFromString(boldFontName, sd.fontSize);

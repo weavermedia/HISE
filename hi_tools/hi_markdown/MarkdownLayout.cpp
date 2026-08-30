@@ -299,11 +299,15 @@ bool MarkdownLayout::StyleData::fromDynamicObject(var obj, const std::function<F
 
 	if(bName == "default")
 	{
+		// No explicit bold font: keep the current typeface and let getBoldFont()
+		// synthesise the bold weight (unless the JSON asked for the special font).
 		boldFont = GLOBAL_BOLD_FONT();
-		useSpecialBoldFont = true;
 	}
 	else
+	{
 		boldFont = fontLoader(bName);
+		useSpecialBoldFont = true;
+	}
 
 	auto getColourFromVar = [&](const Identifier& id, Colour defaultColour)
 	{
@@ -340,7 +344,7 @@ juce::var MarkdownLayout::StyleData::toDynamicObject(bool colourAsString) const
 	};
 
 	obj->setProperty(MarkdownStyleIds::Font, f.getTypefaceName());
-	obj->setProperty(MarkdownStyleIds::BoldFont, boldFont.getTypefaceName());
+	obj->setProperty(MarkdownStyleIds::BoldFont, useSpecialBoldFont ? var(boldFont.getTypefaceName()) : var("default"));
 	obj->setProperty(MarkdownStyleIds::FontSize, fontSize);
 	obj->setProperty(MarkdownStyleIds::LineSpacing, lineSpacing);
 	obj->setProperty(MarkdownStyleIds::LetterSpacing, letterSpacing);
