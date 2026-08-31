@@ -259,14 +259,9 @@ struct MarkdownParser::Headline : public MarkdownParser::Element
 	{
 		using namespace simple_css;
 
-		auto topMargin = 15.0f + ((4.0f - (float)headlineLevel) * 5.0f) * getZoomRatio();
-
 		auto idx = jlimit(0, 4, headlineLevel-1);
 		static ElementType headlines[4] = { ElementType::Headline1, ElementType::Headline2, ElementType::Headline3, ElementType::Headline4 };
-		margins = parent->styleData.getMargin((int)headlines[idx], { topMargin, 10.0f });
-
-		if(!isFirst)
-			margins.first += 20.0f;
+		margins = parent->styleData.getMargin((int)headlines[idx], { 0.0f, 0.0f });
 
 		anchorURL = "#" + s.getText().toLowerCase().replaceCharacters(" ", "-");
 	}
@@ -292,11 +287,6 @@ struct MarkdownParser::Headline : public MarkdownParser::Element
 
 		drawHighlight(g, area);
 
-		g.setColour(Colours::grey.withAlpha(0.2f));
-		
-		if(headlineLevel <= 3)
-			g.drawHorizontalLine((int)(area.getBottom()), area.getX() + imgOffset, area.getRight());
-		
  		l.drawCopyWithOffset(g, area);
 	}
 

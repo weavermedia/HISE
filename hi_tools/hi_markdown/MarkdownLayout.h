@@ -90,7 +90,7 @@ struct MarkdownLayout
 
 		float letterSpacing = 0.0f;
 
-		std::array<float, 4> headlineFontSize = { 2.375f, 1.9375f, 1.5f, 1.2f };
+		std::array<float, 4> headlineFontSize = { 2.0f, 1.75f, 1.5f, 1.25f };
 
 		std::array<std::pair<int, std::pair<float, float>>, 8> margins;
 		
