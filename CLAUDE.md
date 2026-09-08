@@ -4,6 +4,8 @@
 
 **NO EM-DASHES. EVER.** Never write an em-dash in any text output - code, comments, documentation, strings, commit messages. Where a dash is needed in prose, use an en-dash instead; in code, comments, and commit messages prefer a plain hyphen (-). No smart quotes (use straight quotes) and no other non-ASCII characters beyond the en-dash - use three dots (...) instead of an ellipsis character. This rule is non-negotiable and applies to every file in this repository without exception.
 
+**MINIMAL CODE COMMENTS.** Keep comments to a minimum. Only comment what is non-obvious, contradictory, or missing from the self-documenting nature of the code. Do not narrate what the code plainly does. When a comment is needed, keep it to one line and point at the forum topic or GitHub issue/PR for further context instead of writing paragraphs. See "Comments & Documentation" under Code Style for examples.
+
 ## Fork Setup (read first)
 
 This is Dan's personal fork (`weavermedia/HISE`), not the upstream repository. The maintainer of this fork is Dan, who does all custom work on the `meatbeats` branch. The `develop` branch is kept 1:1 with upstream `christophhart/HISE` and is only used to pull in upstream changes before merging them into `meatbeats`.
@@ -103,6 +105,14 @@ HISE uses a lock-free audio architecture. The `MainController::KillStateHandler`
 /** Doxygen-style for classes and public methods */
 // Inline comments for implementation details
 ```
+
+**Comment sparingly.** The code should explain itself through naming and structure. A comment earns its place only when it explains something non-obvious, contradicts what a reader would reasonably assume, or covers a gap the code cannot express. Examples from upstream PRs:
+
+- **Good (non-obvious host behaviour):** `// FL Studio reports odd block sizes regardless of the buffer length in its audio settings, so the generic advice is wrong there.` FL Studio behaves differently to most hosts and nothing in the code says so. (christophhart/HISE#1040)
+- **Good (contradictory macro name):** `#define HISE_COMPLAIN_ABOUT_ILLEGAL_BUFFER_SIZE FRONTEND_IS_PLUGIN` needs its note that instrument plugins pad odd buffer sizes internally, because `FRONTEND_IS_PLUGIN` is confusingly named and reads as the opposite intention without it. (christophhart/HISE#1039)
+- **Too much:** multi-line paragraphs walking through why a value must not be echoed back to the host. Those should be one line each, with a reference to the forum topic or GitHub issue/PR if more context is needed. (christophhart/HISE#1037)
+
+Do not add comments that restate the code, describe an obvious control flow, or mark where a change was made. Do not leave a trail of commentary from your own investigation in the source.
 
 Test documentation uses a three-part format:
 ```cpp
