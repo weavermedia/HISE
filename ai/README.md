@@ -1,10 +1,11 @@
 # ai/
 
-AI-assisted design and reference material for this fork. Three kinds of document live here:
+AI-assisted design and reference material for this fork. Four kinds of document live here:
 
 - **`specs/`** - reference docs that explain how an existing subsystem works, anchored to `file:line`. Durable; kept accurate as the code moves.
 - **`experiments/`** - a log of design, refactor, or feature explorations that were investigated with AI assistance and either abandoned, deferred, or merged with notable caveats. Each file captures one experiment so the same ground is not re-walked later.
 - **`todo/`** - diagnosed bugs or improvements with a root cause and a proposed fix that has not been applied yet. Each file should anchor the diagnosis to `file:line`, include the proposed diff, and a verification recipe. Once applied and verified, move the file to `todo/done/` and update its Status line with the landing commit (see [todo/done/README.md](todo/done/README.md)).
+- **`notes/`** - research notes on non-code topics (licensing, tooling, strategy) that inform decisions about the fork. No `file:line` anchors expected; each should state its sources and date.
 
 ## File convention
 
@@ -39,6 +40,10 @@ Trivial bug fixes, routine refactors, and anything fully captured by a commit me
 ### todo/done/
 
 Completed todos, indexed in [todo/done/README.md](todo/done/README.md).
+
+### notes/
+
+- [notes/hise-licence-and-juce-migration.md](notes/hise-licence-and-juce-migration.md) - What the HISE commercial licence actually covers, why closed-source free plugins keep the subscription alive forever, and the chosen path (ship closed-source HISE builds now, JUCE-built V2s with new plugin codes as the exit; GPL kept as a remote option only).
 
 ### experiments/
 
