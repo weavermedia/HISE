@@ -1,4 +1,4 @@
-# HISE patch handoff — frontend default preset should set `currentlyLoadedFile`
+# HISE patch handoff - frontend default preset should set `currentlyLoadedFile`
 
 **Status:** proposal / handoff for the HISE repo.
 **Target:** `~/Code/HISE` @ `cbf58bc28` (`hi_core/hi_core/MainController.cpp`).
@@ -17,7 +17,7 @@ result, on first launch:
 - HISE's `incPreset()` takes its "no current file" branch on the first prev/next press,
   snapping to the first preset instead of advancing relative to the default.
 
-The HISE **editor** (backend) does **not** have this problem — it sets `defaultFile`, so
+The HISE **editor** (backend) does **not** have this problem - it sets `defaultFile`, so
 `currentlyLoadedFile` is correct there. The bug is frontend-only.
 
 In the Sublime project this forced a pile of workaround code in `Interface.js`
@@ -68,7 +68,7 @@ up.loadUserPresetFromValueTree(defaultPreset, up.currentlyLoadedFile, defaultFil
 so `currentlyLoadedFile` is set to an empty `File`.
 
 By the time `DefaultPresetManager::init()` runs, the embedded presets have already been
-extracted to disk — `FrontEndProcessor.cpp:65` calls
+extracted to disk - `FrontEndProcessor.cpp:65` calls
 `UserPresetHelpers::extractUserPresets(...)` **before** the `FrontendProcessor` is
 constructed (line 69), and the processor ctor is what compiles the interface and later
 inits the default preset manager. So the on-disk file is guaranteed to exist and can be
@@ -78,7 +78,7 @@ resolved here, exactly as the backend branch does.
 
 Mirror the backend branch in the frontend `#else`: resolve the default preset file under
 `FrontendHandler::getUserPresetDirectory()` and assign `defaultFile` (keeping the same
-`isAChildOf` guard that preserves the "hidden default user preset" capability — a default
+`isAChildOf` guard that preserves the "hidden default user preset" capability - a default
 that isn't on disk simply leaves `defaultFile` empty and behaves as today).
 
 ```diff
@@ -132,7 +132,7 @@ the same way the backend branch already does.
    snapping to the first list entry.
 2. **Hidden-default regression:** set `<DefaultUserPreset>` to an embedded default that is
    not present on disk under the user-preset root; confirm it still loads the values and
-   leaves the name blank (unchanged behavior — `defaultFile` stays empty).
+   leaves the name blank (unchanged behavior - `defaultFile` stays empty).
 3. **Editor:** confirm the backend path is unchanged (name already correct there before and
    after).
 

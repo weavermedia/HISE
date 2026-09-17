@@ -1,4 +1,4 @@
-# HISE patch handoff — expose user presets as host programs (AU Presets menu / VST3 program list)
+# HISE patch handoff - expose user presets as host programs (AU Presets menu / VST3 program list)
 
 **Status:** proposal / handoff for the HISE repo. Not yet implemented or tested.
 **Date:** 2026-07-03.
@@ -23,13 +23,13 @@ The host-facing motivation that surfaced this (Sublime project): the user shows 
 plugin window with a hotkey and expects Logic's `[` / `]` to step presets immediately.
 Logic's native keys work at **window** focus; a script-level
 `Content.setKeyPressCallback` only fires once the **plugin UI component** has grabbed
-keyboard focus (i.e. after a click into the UI — `ScriptContentComponent::keyPressed`,
+keyboard focus (i.e. after a click into the UI - `ScriptContentComponent::keyPressed`,
 `ScriptingContentComponent.cpp:750`, is focus-routed by JUCE). Populating the host
 program list makes Logic's own window-level keys do the job; no focus hack needed.
 
 ## Root cause
 
-`FrontendProcessor` stubs out the JUCE program API — including a commented-out
+`FrontendProcessor` stubs out the JUCE program API - including a commented-out
 half-start, so this was clearly intended once:
 
 ```cpp
@@ -54,12 +54,12 @@ JUCE builds the host-facing preset list *entirely* from these four methods:
   selection to `setCurrentProgram`.
 - **VST3:** `IUnitInfo::getProgramListInfo` etc. (`juce_VST3_Wrapper.cpp:373-403`) plus
   an automatable "Program" parameter (`ProgramChangeParameter`, `:804`, flagged
-  `kIsProgramChange | kCanAutomate`) — both only created when `getNumPrograms() > 1`.
+  `kIsProgramChange | kCanAutomate`) - both only created when `getNumPrograms() > 1`.
 
 With the stubs, both wrappers see one program ("Default") and publish nothing useful.
 
 This is **not reachable from a project**: no script API, XML attribute, or export flag
-touches these overrides (`ReadOnlyFactoryPresets` is unrelated — it only write-protects
+touches these overrides (`ReadOnlyFactoryPresets` is unrelated - it only write-protects
 factory preset files).
 
 ## Sketched fix
@@ -69,7 +69,7 @@ Expose the same flat, sorted preset list that `UserPresetHandler::incPreset()`
 the host menu order matches the in-plugin browser and script `loadNext/PreviousUserPreset`
 exactly.
 
-**`hi_frontend/frontend/FrontEndProcessor.h`** — replace the four stubs (lines 192-209):
+**`hi_frontend/frontend/FrontEndProcessor.h`** - replace the four stubs (lines 192-209):
 
 ```cpp
 int getNumPrograms() override
@@ -104,7 +104,7 @@ const Array<File>& getFactoryPresetList();
 void refreshFactoryPresetList();
 ```
 
-**`hi_frontend/frontend/FrontendProcessor.cpp`** — replace the no-op (line 624):
+**`hi_frontend/frontend/FrontendProcessor.cpp`** - replace the no-op (line 624):
 
 ```cpp
 const Array<File>& FrontendProcessor::getFactoryPresetList()
@@ -133,7 +133,7 @@ void FrontendProcessor::setCurrentProgram(int index)
 
 (`FrontendProcessor` inherits `MainController`, so `getUserPresetHandler()` and
 `this`-as-`MainController*` both resolve. Enumeration mirrors `incPreset()`:
-`findChildFiles(..., true, "*.preset")` → `cleanFileList` → `sort()`.)
+`findChildFiles(..., true, "*.preset")` -> `cleanFileList` -> `sort()`.)
 
 ## Recall-integrity analysis (why by-index is safe)
 
@@ -145,13 +145,13 @@ index.**
   `mCurrentPreset.presetNumber = -1` ("custom") on restore (`AUBase.cpp:2124-2130`);
   `setCurrentProgram` is only ever called from an explicit user menu pick
   (`NewFactoryPresetSet`, `AUBase.cpp:928-931`).
-- **VST3:** `setState` (`juce_VST3_Wrapper.cpp:2637`) → `setStateInformation` (full
+- **VST3:** `setState` (`juce_VST3_Wrapper.cpp:2637`) -> `setStateInformation` (full
   chunk). The controller's `setComponentState` *derives* the Program parameter's display
   from the already-restored `getCurrentProgram()` (`:947-949`) rather than re-applying a
   stored index.
 
 So renaming/reordering/deleting/editing presets between sessions never changes what a
-saved session sounds like — the state blob is authoritative in every host/format.
+saved session sounds like - the state blob is authoritative in every host/format.
 
 Remaining by-index effects are cosmetic, plus one marginal VST3 edge:
 
@@ -170,7 +170,7 @@ Remaining by-index effects are cosmetic, plus one marginal VST3 edge:
 | Logic | AU | AU Presets submenu populates; native `[` / `]` (window-level focus) step presets |
 | Cubase | VST3 | Named program selector populates |
 | Reaper | VST3/AU | FX-window preset dropdown populates |
-| Ableton Live | VST3 | Weak — no browsable program menu; only the step "Program" parameter |
+| Ableton Live | VST3 | Weak - no browsable program menu; only the step "Program" parameter |
 
 ## Known gaps in the sketch (decide before merging)
 
@@ -192,7 +192,7 @@ Remaining by-index effects are cosmetic, plus one marginal VST3 edge:
    message thread; the lazy build does file I/O. Consider building the list once at
    construction instead of lazily.
 5. `getNumPrograms()` returning 1 with an empty dir vs. `getProgramName` returning
-   "Init" — harmless, but pick a deliberate empty-state story.
+   "Init" - harmless, but pick a deliberate empty-state story.
 
 ## Relation to Sublime project
 

@@ -1,6 +1,6 @@
-# LFO IgnoreNoteOn also disables FadeIn — fade should still retrigger per note
+# LFO IgnoreNoteOn also disables FadeIn - fade should still retrigger per note
 
-**Date:** 2026-07-04 (diagnosed in Sublime — "LFO retrigger" settings toggle)
+**Date:** 2026-07-04 (diagnosed in Sublime - "LFO retrigger" settings toggle)
 **Target commit:** `598670c6d` (branch `meatbeats`)
 **Status:** Done - landed in meatbeats `3576607bc` (fork decision: option 1, no new params), fade verified working; upstream options list retained in case it ever goes to Christoph
 **Affects:** `LfoModulator` with `IgnoreNoteOn=1` and `FadeIn > 0`
@@ -8,15 +8,15 @@
 ## Symptom
 
 With `IgnoreNoteOn` enabled (free-running LFO), the `FadeIn` parameter appears
-dead: the fade ramp runs exactly once — at the moment `IgnoreNoteOn` is set to 1
-(its setter calls `resetPhase()` as a side effect) — and every note after that
+dead: the fade ramp runs exactly once - at the moment `IgnoreNoteOn` is set to 1
+(its setter calls `resetPhase()` as a side effect) - and every note after that
 plays with the LFO at full depth immediately. Users who want a free-running
 phase but still expect the fade to ease the LFO in on each note get no fade at
 all, with no hint in the UI that the two parameters are mutually exclusive.
 
 ## Root cause
 
-The fade-in reset is coupled to the phase reset — `resetFadeIn()` is only
+The fade-in reset is coupled to the phase reset - `resetFadeIn()` is only
 called from inside `resetPhase()`:
 
 `hi_core/hi_modules/modulators/mods/LFOModulator.cpp:765`:
@@ -26,7 +26,7 @@ void LfoModulator::resetPhase()
 {
     uptime = phaseOffset * (double)SAMPLE_LOOKUP_TABLE_SIZE;
     ...
-    resetFadeIn();   // attackValue = 0.0f — the ONLY place the ramp restarts
+    resetFadeIn();   // attackValue = 0.0f - the ONLY place the ramp restarts
 }
 ```
 
@@ -52,11 +52,11 @@ if(m.isNoteOn())
 ```
 
 Once `attackValue` ramps to 1.0 it holds there (`calculateNewValue`,
-`LFOModulator.cpp:567`) until the next `resetFadeIn()` — which never comes.
+`LFOModulator.cpp:567`) until the next `resetFadeIn()` - which never comes.
 
 Note the same guard also skips `mb.startVoice(0)` for the LFO's internal
-intensity/frequency chains, so the usual workaround — an envelope inside the
-LFO's Intensity chain to fake the fade — is also dead when `IgnoreNoteOn` is
+intensity/frequency chains, so the usual workaround - an envelope inside the
+LFO's Intensity chain to fake the fade - is also dead when `IgnoreNoteOn` is
 on. There is no project-side escape hatch.
 
 ## Proposed fix
@@ -103,12 +103,12 @@ not dip on new notes) would now hear the fade re-run per note whenever
 `FadeIn > 0`. Options, in order of preference:
 
 1. **Just change it.** Patches with `FadeIn=0` are unaffected (`resetFadeIn`
-   with `attack == 0.0f` snaps `attackValue` back to 1.0 on the next sample —
+   with `attack == 0.0f` snaps `attackValue` back to 1.0 on the next sample -
    inaudible). The compat risk is only patches that have `FadeIn > 0` *and*
    `IgnoreNoteOn=1` together: today they get full depth (the fade value is
    silently ignored), after the fix they get a per-note fade. Arguably those
    patches carry a stale fade value the author never heard, so honouring it is
-   closer to intent than ignoring it — but it IS an audible change.
+   closer to intent than ignoring it - but it IS an audible change.
 2. **Gate it behind a new parameter** (e.g. `RetriggerFadeIn`, default off) if
    1 is too risky. Only meaningful when `IgnoreNoteOn=1` (with it off, fade
    retriggers anyway), so the effective rule is
@@ -158,12 +158,12 @@ list stays as-is in case this ever goes to Christoph.
 ## Verification
 
 1. `IgnoreNoteOn=1`, `FadeIn=2000`: each note-on should restart the depth ramp
-   (LFO eases in over 2s) while the LFO *phase* keeps running — play two
+   (LFO eases in over 2s) while the LFO *phase* keeps running - play two
    staccato notes a quarter-cycle apart and confirm the waveform position
    differs but both fade in.
-2. `IgnoreNoteOn=1`, `FadeIn=0`: unchanged — full depth immediately, no dip on
+2. `IgnoreNoteOn=1`, `FadeIn=0`: unchanged - full depth immediately, no dip on
    note-on.
-3. `IgnoreNoteOn=0`: unchanged — phase and fade both reset per note (or per
+3. `IgnoreNoteOn=0`: unchanged - phase and fade both reset per note (or per
    first note with `Legato=1`).
 4. Legato: with `Legato=1` and `IgnoreNoteOn=1`, overlapping notes must NOT
    re-run the fade; only the first note of a legato group does.

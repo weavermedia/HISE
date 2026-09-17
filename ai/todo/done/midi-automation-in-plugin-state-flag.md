@@ -1,4 +1,4 @@
-# MIDI automation is restored AFTER onInit from project/instance state – add companion flag `HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE`
+# MIDI automation is restored AFTER onInit from project/instance state - add companion flag `HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE`
 
 **Date:** 2026-07-10 (follow-up to `HISE_MIDI_AUTOMATION_IN_USER_PRESETS`, fork commit `5b09675f2`)
 **Target commit:** `67fa79271` (branch `meatbeats`)
@@ -8,20 +8,20 @@
 ## Symptom
 
 With `HISE_MIDI_AUTOMATION_IN_USER_PRESETS=0`, presets no longer touch CC
-assignments – but a project that applies its own mappings in `onInit`
+assignments - but a project that applies its own mappings in `onInit`
 (script-side global persistence) still gets them wiped, because HISE restores
 `MidiAutomation` from *project/instance state* **after** script compilation:
 
 - **Editor project load** (`MainController::loadPresetInternal`): the project
   XML's `<MidiAutomation/>` is stashed via `setUnloadedData()` *before*
   `compileAllScripts()` (`MainController.cpp:562`) and applied *after*
-  compilation via `loadUnloadedData()` (`MainController.cpp:577` – postponed
+  compilation via `loadUnloadedData()` (`MainController.cpp:577` - postponed
   deliberately to resolve attribute indexes). Sublime's project XML carries an
   empty `<MidiAutomation/>`, so every project load clears whatever `onInit`
   applied.
 - **Exported plugin instantiation** (`FrontendProcessor::restorePlugin`):
   the embedded project state's `MidiAutomation` node is restored after
-  `compileAllScripts()` (`FrontEndProcessor.cpp:458`) – same wipe.
+  `compileAllScripts()` (`FrontEndProcessor.cpp:458`) - same wipe.
 - **DAW session load** (`FrontendProcessor::setStateInformation`,
   `FrontEndProcessor.cpp:576`): the per-instance session copy overwrites the
   onInit-applied global mappings.
@@ -29,13 +29,13 @@ assignments – but a project that applies its own mappings in `onInit`
 Worse than the wipe itself: each restore fires the handler's change message,
 so a script `setUpdateCallback` persistence scheme (write-on-change) then
 **writes the wiped/stale state back into its global file**. Script-side code
-cannot distinguish these restores from real user edits – the opt-out has to
+cannot distinguish these restores from real user edits - the opt-out has to
 live in HISE.
 
 There is also a save-side counterpart: `ModulatorSynthChain::exportAsValueTree`
 (`ModulatorSynthChain.cpp:210`) writes the `MidiAutomation` node into the
 project XML / `.hip` / embedded state, and `MainController::savePluginState`
-(`MainController.cpp:2378`) writes it into DAW session state – dead/lying data
+(`MainController.cpp:2378`) writes it into DAW session state - dead/lying data
 once the project owns persistence.
 
 ## Fix
@@ -51,7 +51,7 @@ Backend sites use `HISE_GET_PREPROCESSOR` (runtime read from Extra
 Definitions, no HISE rebuild); frontend-only sites use plain `#if` (the macro
 is baked into the export by the generated Projucer project).
 
-### 1. Default + doc – `hi_core/hi_core.h` (directly below `HISE_MIDI_AUTOMATION_IN_USER_PRESETS`)
+### 1. Default + doc - `hi_core/hi_core.h` (directly below `HISE_MIDI_AUTOMATION_IN_USER_PRESETS`)
 
 ```cpp
 /** Config: HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE
@@ -61,7 +61,7 @@ state (project file, embedded plugin data, DAW session chunk) and restored
 from it after script compilation. Disable this together with
 HISE_MIDI_AUTOMATION_IN_USER_PRESETS to make the project script the single
 owner of MIDI CC assignments (e.g. persisting them to a global file in the
-app data folder through the MidiAutomationHandler scripting object) – the
+app data folder through the MidiAutomationHandler scripting object) - the
 post-compilation restore would otherwise overwrite the assignments the script
 applied in onInit.
 
@@ -74,7 +74,7 @@ HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE=0 to your ExtraDefinitions.
 #endif
 ```
 
-### 2. Editor project load, deferred restore – `hi_core/hi_core/MainController.cpp:562` (`loadPresetInternal`)
+### 2. Editor project load, deferred restore - `hi_core/hi_core/MainController.cpp:562` (`loadPresetInternal`)
 
 ```diff
 -				getMacroManager().getMidiControlAutomationHandler()->setUnloadedData(v.getChildWithName("MidiAutomation"));
@@ -82,10 +82,10 @@ HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE=0 to your ExtraDefinitions.
 +					getMacroManager().getMidiControlAutomationHandler()->setUnloadedData(v.getChildWithName("MidiAutomation"));
 ```
 
-(`loadUnloadedData()` at line 577 then no-ops on the invalid tree – no second
+(`loadUnloadedData()` at line 577 then no-ops on the invalid tree - no second
 gate needed.)
 
-### 3. Chain restore, non-deferred path – `hi_core/hi_dsp/modules/ModulatorSynthChain.cpp:415` (`restoreFromValueTree`)
+### 3. Chain restore, non-deferred path - `hi_core/hi_dsp/modules/ModulatorSynthChain.cpp:415` (`restoreFromValueTree`)
 
 ```diff
 -	if (!getMainController()->shouldSkipCompiling())
@@ -95,7 +95,7 @@ gate needed.)
  		ValueTree autoData = v.getChildWithName("MidiAutomation");
 ```
 
-### 4. Save side, project/chain export – `hi_core/hi_dsp/modules/ModulatorSynthChain.cpp:210` (`exportAsValueTree`)
+### 4. Save side, project/chain export - `hi_core/hi_dsp/modules/ModulatorSynthChain.cpp:210` (`exportAsValueTree`)
 
 ```diff
 -		v.addChild(getMainController()->getMacroManager().getMidiControlAutomationHandler()->exportAsValueTree(), -1, nullptr);
@@ -104,9 +104,9 @@ gate needed.)
 ```
 
 (Removes the `<MidiAutomation/>` node from the project XML on the next editor
-save – intended: no lying data at rest.)
+save - intended: no lying data at rest.)
 
-### 5. Save side, DAW session chunk – `hi_core/hi_core/MainController.cpp:2378` (`savePluginState`)
+### 5. Save side, DAW session chunk - `hi_core/hi_core/MainController.cpp:2378` (`savePluginState`)
 
 ```diff
 -    getUserPresetHandler().saveStateManager(v, UserPresetIds::MidiAutomation);
@@ -114,7 +114,7 @@ save – intended: no lying data at rest.)
 +        getUserPresetHandler().saveStateManager(v, UserPresetIds::MidiAutomation);
 ```
 
-### 6. Exported plugin, embedded-state restore – `hi_frontend/frontend/FrontEndProcessor.cpp:458` (`restorePlugin`)
+### 6. Exported plugin, embedded-state restore - `hi_frontend/frontend/FrontEndProcessor.cpp:458` (`restorePlugin`)
 
 ```diff
 +#if HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE
@@ -125,7 +125,7 @@ save – intended: no lying data at rest.)
 +#endif
 ```
 
-### 7. Exported plugin, DAW session restore – `hi_frontend/frontend/FrontEndProcessor.cpp:576` (`setStateInformation`)
+### 7. Exported plugin, DAW session restore - `hi_frontend/frontend/FrontEndProcessor.cpp:576` (`setStateInformation`)
 
 ```diff
 +#if HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE
@@ -133,13 +133,13 @@ save – intended: no lying data at rest.)
 +#endif
 ```
 
-### 8. Register in the preprocessor database – `hi_backend/backend/PreprocessorDatabase.cpp` (next to the `HISE_MIDI_AUTOMATION_IN_USER_PRESETS` entry)
+### 8. Register in the preprocessor database - `hi_backend/backend/PreprocessorDatabase.cpp` (next to the `HISE_MIDI_AUTOMATION_IN_USER_PRESETS` entry)
 
 ```cpp
 data["HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE"] = Entry()
 	.withCategory(Category::AutomationAndMacros)
 	.withBrief("Stores MIDI learn CC assignments in the project and plugin instance state and restores them after script compilation.")
-	.withDescriptionLine("When enabled (the default), MIDI CC assignments live in the project file, the embedded plugin data and the DAW session chunk, and are restored from there after every project load, plugin instantiation and session load – including after the interface script's onInit has run. Disable this together with HISE_MIDI_AUTOMATION_IN_USER_PRESETS when the project script owns the assignments itself (for example persisting them to a global file through the MidiAutomationHandler scripting object), because the post-compilation restore would otherwise overwrite the script-applied assignments and re-trigger the update callback with the overwritten state.")
+	.withDescriptionLine("When enabled (the default), MIDI CC assignments live in the project file, the embedded plugin data and the DAW session chunk, and are restored from there after every project load, plugin instantiation and session load - including after the interface script's onInit has run. Disable this together with HISE_MIDI_AUTOMATION_IN_USER_PRESETS when the project script owns the assignments itself (for example persisting them to a global file through the MidiAutomationHandler scripting object), because the post-compilation restore would otherwise overwrite the script-applied assignments and re-trigger the update callback with the overwritten state.")
 	.withDescriptionLine("> Read at runtime from the Extra Definitions, so no HISE rebuild is required. With this disabled the project XML no longer contains a MidiAutomation node after the next save.")
 	.withDefault(1)
 	.withValue(HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE)
@@ -154,7 +154,7 @@ data["HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE"] = Entry()
   restored (editor project loads no longer clear onInit-applied mappings).
 - DAW session chunk: node neither written nor restored (session load no
   longer overwrites the global mappings).
-- User presets: unaffected by this flag – governed by
+- User presets: unaffected by this flag - governed by
   `HISE_MIDI_AUTOMATION_IN_USER_PRESETS`.
 - In-memory behaviour (learn, popup, table UI, update callback) unchanged.
 
@@ -162,12 +162,12 @@ data["HISE_MIDI_AUTOMATION_IN_PLUGIN_STATE"] = Entry()
 
 1. Both flags unset: byte-identical behaviour to today (node in project XML,
    session persistence, post-compile restore).
-2. Both flags `=0` in ExtraDefinitions, editor: MIDI-learn a knob → reload
-   the project → mapping survives (script re-applies from
+2. Both flags `=0` in ExtraDefinitions, editor: MIDI-learn a knob -> reload
+   the project -> mapping survives (script re-applies from
    `MidiMappings.json`, nothing wipes it post-compile); saving the project
    drops `<MidiAutomation/>` from the project XML.
-3. Both flags `=0`, exported plugin: map a CC in instance A → open a new
-   instance B → mapping present; reopen an old DAW session → current global
+3. Both flags `=0`, exported plugin: map a CC in instance A -> open a new
+   instance B -> mapping present; reopen an old DAW session -> current global
    mappings shown, not the session's stale copy; `MidiMappings.json` never
    gets overwritten by loads.
 4. `PLUGIN_STATE=0` with `USER_PRESETS=1` (odd but legal): presets still

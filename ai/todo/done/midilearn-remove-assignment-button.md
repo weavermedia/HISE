@@ -8,7 +8,7 @@
 
 ## Motivation
 
-The only way to remove a MIDI Learn assignment from the panel is to select the row and press DELETE (`TableFloatingTileBase::deleteKeyPressed`). That is undiscoverable for end users of an exported plugin — nothing in the UI hints that rows are deletable, and a plugin UI is not a context where users expect keyboard-driven table editing. A visible per-row remove button fixes this.
+The only way to remove a MIDI Learn assignment from the panel is to select the row and press DELETE (`TableFloatingTileBase::deleteKeyPressed`). That is undiscoverable for end users of an exported plugin - nothing in the UI hints that rows are deletable, and a plugin UI is not a context where users expect keyboard-driven table editing. A visible per-row remove button fixes this.
 
 Not achievable from the project side: the panel is a hardcoded C++ `TableListBox` (`FrontendPanelTypes.h:700` `TableFloatingTileBase`, `:861` `MidiLearnPanel`); columns and cell components are compiled in. HiseScript/XML/CSS can restyle it but cannot add a column.
 
@@ -16,9 +16,9 @@ Not achievable from the project side: the panel is a hardcoded C++ `TableListBox
 
 Add a `Delete` column as the last column, with a small `TextButton("X")` cell component mirroring the existing `InvertedButton` pattern. Clicking it removes that row's assignment via the existing `deleteKeyPressed(row)` path (which already does the `isUsed` check + `removeEntry` + `updateContent` + `repaint`).
 
-**Re-entrancy trap (the one non-obvious part):** `removeEntry()` notifies the handler → `changeListenerCallback` → `updateContent()`, which destroys the cell component whose `buttonClicked` is still on the stack. The click handler must therefore defer the removal with `MessageManager::callAsync` and a `Component::SafePointer` on the owner. (`deleteKeyPressed` gets away with running synchronously because the KeyListener isn't owned by a table cell.)
+**Re-entrancy trap (the one non-obvious part):** `removeEntry()` notifies the handler -> `changeListenerCallback` -> `updateContent()`, which destroys the cell component whose `buttonClicked` is still on the stack. The click handler must therefore defer the removal with `MessageManager::callAsync` and a `Component::SafePointer` on the owner. (`deleteKeyPressed` gets away with running synchronously because the KeyListener isn't owned by a table cell.)
 
-Enum note: `Delete` is inserted before `numColumns`/`columnWidthRatio`, which are dead members of the `ColumnId` enum — nothing reads them (the `options.numColumns` hits in `FrontendPanelTypes.cpp:1055ff` belong to a different struct), so no ID shift breaks anything.
+Enum note: `Delete` is inserted before `numColumns`/`columnWidthRatio`, which are dead members of the `ColumnId` enum - nothing reads them (the `options.numColumns` hits in `FrontendPanelTypes.cpp:1055ff` belong to a different struct), so no ID shift breaks anything.
 
 JUCE note: `TableHeaderComponent::addColumn` has no non-empty-name assertion (`juce_TableHeaderComponent.cpp:106`), so an empty header title `""` for the X column is fine.
 
@@ -148,15 +148,15 @@ Next to the `InvertedButton` implementations (~line 1730):
 
 ## Scope / caveats
 
-- **`FrontendMacroPanel` gets the X column too** — it shares `initTable()` and has its own working `removeEntry()` (`FrontendPanelTypes.cpp:1497ff`), so the button works there for free and keeps the two tables consistent. To scope it to MIDI Learn only, add a flag parameter to `initTable()` like the existing `addChannelColumn`.
-- **CSS-styled tables:** the `simple_css` branch of `TableFloatingTileBase::resized()` (~line 1952ff) fixes column widths by *index* (button column at index 2, sliders at 3–4) and doesn't know about the new last column. Default-LAF rendering is unaffected; a CSS-styled panel may want a width rule for the X column.
+- **`FrontendMacroPanel` gets the X column too** - it shares `initTable()` and has its own working `removeEntry()` (`FrontendPanelTypes.cpp:1497ff`), so the button works there for free and keeps the two tables consistent. To scope it to MIDI Learn only, add a flag parameter to `initTable()` like the existing `addChannelColumn`.
+- **CSS-styled tables:** the `simple_css` branch of `TableFloatingTileBase::resized()` (~line 1952ff) fixes column widths by *index* (button column at index 2, sliders at 3-4) and doesn't know about the new last column. Default-LAF rendering is unaffected; a CSS-styled panel may want a width rule for the X column.
 - The X button intentionally reuses `deleteKeyPressed()` rather than calling `removeEntry()` directly, so keyboard DELETE and the button stay one code path.
 
 ## Verification
 
 1. Load a project with MIDI-learnable knobs; assign two or three CCs.
 2. Open the MIDI Learn panel: each row should show an X button in the last column.
-3. Click X on the middle row → that assignment (and only that one) disappears; no crash (this is the `callAsync` re-entrancy check — also click rapidly on several rows in succession).
+3. Click X on the middle row -> that assignment (and only that one) disappears; no crash (this is the `callAsync` re-entrancy check - also click rapidly on several rows in succession).
 4. Keyboard DELETE on a selected row still works.
 5. FrontendMacroPanel: same checks with macro-assigned parameters.
 6. Exported plugin: confirm the X column renders and works in a host (the panel behaves the same in frontend builds).
