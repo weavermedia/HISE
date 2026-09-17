@@ -36,6 +36,8 @@ Trivial bug fixes, routine refactors, and anything fully captured by a commit me
 - [todo/pluginparametergroup-validation-order.md](todo/pluginparametergroup-validation-order.md) - "is not a valid group name" console flood on every compile because XML restore validates before the script registers group names; one-line empty-list guard.
 - [todo/loaduserpreset-extension-autoappend.md](todo/loaduserpreset-extension-autoappend.md) - Engine.loadUserPreset's documented ".preset" auto-append is an inverted-condition no-op, so getUserPresetList() output silently fails to load.
 - [todo/markdown-ordered-list-renumbering.md](todo/markdown-ordered-list-renumbering.md) - Ordered lists ignore literal numbers and renumber from 1 per blank-line-separated block (remaining half; digit-eating half fixed in fc8da09a7).
+- [todo/ladder-filter-feedback-saturation.md](todo/ladder-filter-feedback-saturation.md) - Feedback tanh in the ladder filter driven by the currently ignored Gain parameter, gated so old sessions stay bit-exact. Implemented 2026-07-15 and reverted 2026-07-20 pending a listening decision; the applied diff is in the .patch alongside and an A/B Debug build was kept.
+- [todo/sublime-instrument-sidechain-input.md](todo/sublime-instrument-sidechain-input.md) - Feasibility research for a stereo "Sidechain" input bus on exported instrument plugins (external pump source for Sublime): bus layout, hidden-channel copy, and the export-time channel-count bookkeeping that makes it a day of work. No code written; product decision pending.
 
 ### todo/done/
 

@@ -1,0 +1,70 @@
+diff --git a/hi_core/hi_modules/effects/editors/FilterEditor.h b/hi_core/hi_modules/effects/editors/FilterEditor.h
+index 59f9ccee4..809ade784 100644
+--- a/hi_core/hi_modules/effects/editors/FilterEditor.h
++++ b/hi_core/hi_modules/effects/editors/FilterEditor.h
+@@ -74,6 +74,7 @@ public:
+ 		case FilterBank::StateVariableLP: qSlider->setEnabled(true); gainSlider->setEnabled(false); break;
+ 		case FilterBank::StateVariableHP: qSlider->setEnabled(true); gainSlider->setEnabled(false); break;
+ 		case FilterBank::MoogLP:			qSlider->setEnabled(true); gainSlider->setEnabled(false); break;
++		case FilterBank::LadderFourPoleLP:	qSlider->setEnabled(true); gainSlider->setEnabled(true); break;
+ 		default:								break;
+ 		}
+ 	};
+diff --git a/hi_dsp_library/dsp_basics/MultiChannelFilters.cpp b/hi_dsp_library/dsp_basics/MultiChannelFilters.cpp
+index fc09ed927..4620aa5e8 100644
+--- a/hi_dsp_library/dsp_basics/MultiChannelFilters.cpp
++++ b/hi_dsp_library/dsp_basics/MultiChannelFilters.cpp
+@@ -892,7 +892,7 @@ void LadderSubType::processFrame(float* d, int numChannels)
+ 	}
+ }
+ 
+-void LadderSubType::updateCoefficients(double sampleRate, double frequency, double q, double /*gain*/)
++void LadderSubType::updateCoefficients(double sampleRate, double frequency, double q, double gain)
+ {
+ 	float inFreq = (float)FilterLimits::limitFrequency(frequency);
+ 
+@@ -900,6 +900,9 @@ void LadderSubType::updateCoefficients(double sampleRate, double frequency, doub
+ 
+ 	cut = jlimit<float>(0.0f, 0.8f, x);
+ 	res = jlimit<float>(0.3f, 4.0f, (float)q / 2.0f);
++
++	// gain is a linear factor (1.0 = 0 dB); values above 0 dB drive the feedback saturation
++	drive = jmax(1.0f, (float)gain);
+ }
+ 
+ float LadderSubType::processSample(float input, int channel)
+@@ -908,6 +911,13 @@ float LadderSubType::processSample(float input, int channel)
+ 
+ 	float resoclip = buffer[3];
+ 
++	// Saturate the feedback path only when driven past 0 dB (opt-in:
++	// bit-exact with the legacy linear ladder at the default gain).
++	// tanh(x*d)/d has slope 1 at the origin, so the res calibration and
++	// small-signal behaviour are unchanged - drive only moves the clip knee.
++	if (drive > 1.004f)
++		resoclip = std::tanh(resoclip * drive) / drive;
++
+ 	const float in = input - (resoclip * res);
+ 	buffer[0] = ((in - buffer[0]) * cut) + buffer[0];
+ 	buffer[1] = ((buffer[0] - buffer[1]) * cut) + buffer[1];
+diff --git a/hi_dsp_library/dsp_basics/MultiChannelFilters.h b/hi_dsp_library/dsp_basics/MultiChannelFilters.h
+index 69394c9be..a732c7ee5 100644
+--- a/hi_dsp_library/dsp_basics/MultiChannelFilters.h
++++ b/hi_dsp_library/dsp_basics/MultiChannelFilters.h
+@@ -530,7 +530,7 @@ public:
+ 	void setType(int /*t*/);;
+ 	void processSamples(AudioSampleBuffer& b, int startSample, int numSamples);
+ 	void processFrame(float* frameData, int numChannels);
+-	void updateCoefficients(double sampleRate, double frequency, double q, double /*gain*/);
++	void updateCoefficients(double sampleRate, double frequency, double q, double gain);
+ 
+ private:
+ 
+@@ -539,6 +539,7 @@ private:
+ 
+ 	float cut;
+ 	float res;
++	float drive = 1.0f;
+ };
+ 
+ FORWARD_DECLARE_MULTI_CHANNEL_FILTER(LadderSubType);
