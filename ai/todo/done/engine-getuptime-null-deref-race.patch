@@ -1,0 +1,21 @@
+diff --git a/hi_scripting/scripting/api/ScriptingApi.cpp b/hi_scripting/scripting/api/ScriptingApi.cpp
+index d17c9e92f..07f3dbdfe 100644
+--- a/hi_scripting/scripting/api/ScriptingApi.cpp
++++ b/hi_scripting/scripting/api/ScriptingApi.cpp
+@@ -1692,9 +1692,14 @@ double ScriptingApi::Engine::getMilliSecondsForQuarterBeatsWithTempo(double quar
+ 
+ double ScriptingApi::Engine::getUptime() const
+ {
+-	if (parentMidiProcessor != nullptr && parentMidiProcessor->getCurrentHiseEvent() != nullptr)
++	if (parentMidiProcessor != nullptr)
+ 	{
+-		return parentMidiProcessor->getMainController()->getUptime() + parentMidiProcessor->getCurrentHiseEvent()->getTimeStamp() / getSampleRate();
++		// Grab the event pointer once - calling this twice can return a valid pointer
++		// for the null check and a nullptr for the dereference if the audio thread
++		// clears it in between (the member is written by the audio thread while
++		// deferred callbacks read it from the scripting thread).
++		if (auto currentEvent = parentMidiProcessor->getCurrentHiseEvent())
++			return parentMidiProcessor->getMainController()->getUptime() + currentEvent->getTimeStamp() / getSampleRate();
+ 	}
+ 
+ 	return getProcessor()->getMainController()->getUptime();
