@@ -2817,10 +2817,19 @@ void CompileExporter::BatchFileCreator::createBatchFile(CompileExporter* exporte
 
 #if JUCE_WINDOWS
     
-	const String msbuildPath = HelperClasses::isUsingVisualStudio2026(exporter->dataObject) ? 
+	const bool isVs2026 = HelperClasses::isUsingVisualStudio2026(exporter->dataObject);
 
+	// Fallback when vswhere is missing or finds nothing: the Community edition's
+	// default install path (what this used to be hardcoded to).
+	const String msbuildFallbackPath = isVs2026 ?
 		"\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\MsBuild.exe\"" :
 		"\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MsBuild.exe\"";
+
+	// vswhere version range for the VS major the solution targets (VS2026 = 18.x,
+	// VS2022 = 17.x). The comma and closing paren are caret-escaped because the
+	// range sits inside a `for /f` command set; quoting it instead trips cmd's
+	// outer-quote stripping (the command already starts with a quoted path).
+	const String vswhereVersionRange = isVs2026 ? "[18.0^,19.0^)" : "[17.0^,18.0^)";
 
 	const String projucerPath = exporter->hisePath.getChildFile("JUCE/Projucer/Projucer.exe").getFullPathName();
 	
@@ -2836,7 +2845,13 @@ void CompileExporter::BatchFileCreator::createBatchFile(CompileExporter* exporte
 	if (!exporter->rawMode)
 	{
 		
-		ADD_LINE("set msbuild=" << msbuildPath);
+		// Locate MSBuild at batch run time via vswhere, so any edition works
+		// (Build Tools, Community, Professional, Enterprise). hise-cli's setup
+		// wizard installs Build Tools only, which has no Community path at all.
+		ADD_LINE("set msbuild=");
+		ADD_LINE("set \"vswhere=%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe\"");
+		ADD_LINE("if exist \"%vswhere%\" for /f \"usebackq delims=\" %%m in (`\"%vswhere%\" -latest -products * -version " << vswhereVersionRange << " -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe`) do set msbuild=\"%%m\"");
+		ADD_LINE("if not defined msbuild set msbuild=" << msbuildFallbackPath);
 		ADD_LINE("set vs_args=" << vsArgs);
 		ADD_LINE("set PreferredToolArchitecture=x64");
 
