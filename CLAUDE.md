@@ -12,7 +12,7 @@ This is Dan's personal fork (`weavermedia/HISE`), not the upstream repository. T
 
 Because of this, references elsewhere in upstream docs to "Christoph" owning builds and commits do NOT apply here. The authoritative rules for this fork are:
 
-- **Builds:** Dan runs most builds manually in Xcode. Claude may run the root `./build_meatbeats.sh` script (standalone IDE, Debug by default) when Dan explicitly asks (e.g. "build please"). Never build unprompted, never run unit tests, and do not attempt any other build path (Xcode GUI, signing, notarization).
+- **Builds:** Dan runs most builds manually in Xcode. Claude may run the root `./build_meatbeats.sh` script on macOS, or `build_meatbeats.bat` on Windows (standalone IDE, Debug by default), when Dan explicitly asks (e.g. "build please"). Never build unprompted, never run unit tests, and do not attempt any other build path (Xcode or Visual Studio GUI, signing, notarization).
 - **Git:** Claude may stage, commit, and branch when Dan explicitly asks, following the repo's commit conventions. Do not commit or alter git state unprompted.
 
 ## Project Overview
@@ -23,7 +23,7 @@ HISE (Hart Instruments Sampling Engine) is a cross-platform C++17 audio framewor
 
 HISE uses **Projucer** (JUCE's project tool) to generate IDE projects from `.jucer` files. There is no CMake build at the project level.
 
-**Builds:** Dan runs most builds manually in Xcode. Claude may run the root `./build_meatbeats.sh` script when Dan explicitly asks (e.g. "build please"), but never builds unprompted and never runs unit tests. See "Fork Setup" above for details and the git policy.
+**Builds:** Dan runs most builds manually in Xcode. Claude may run the root `./build_meatbeats.sh` (macOS) or `build_meatbeats.bat` (Windows) script when Dan explicitly asks (e.g. "build please"), but never builds unprompted and never runs unit tests. See "Fork Setup" above for details and the git policy.
 
 ### Build Configurations
 
