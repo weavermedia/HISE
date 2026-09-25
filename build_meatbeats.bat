@@ -16,7 +16,8 @@ REM   - Resaves the .jucer with Projucer first, which regenerates the
 REM     untracked AppConfig.h (avoids the recurring "AppConfig.h not found").
 REM   - Locates MSBuild via vswhere and picks the VS2026 or VS2022 solution
 REM     to match the newest installed Visual Studio.
-REM   - Builds standalone only (the IDE/backend), x64.
+REM   - Builds standalone only (the IDE/backend), x64, with the 64-bit MSVC
+REM     toolchain forced so LTCG linking does not run out of heap.
 REM   - Does NOT touch git state and does NOT run unit tests.
 
 cd /d "%~dp0"
@@ -102,7 +103,7 @@ if errorlevel 1 (
 REM --- Build -------------------------------------------------------------------
 echo Building HISE Standalone [%config% / %platform%] using %vs_folder%...
 echo Visual Studio version: %vs_version%
-"%msbuild%" "%solution%" /t:Build /p:Configuration="%config%";Platform=%platform% /m /v:m
+"%msbuild%" "%solution%" /t:Build /p:Configuration="%config%";Platform=%platform%;PreferredToolArchitecture=x64 /m /v:m
 if errorlevel 1 (
   echo Error: build failed. 1>&2
   exit /b 1
